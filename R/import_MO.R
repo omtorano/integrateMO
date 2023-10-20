@@ -1,11 +1,11 @@
 #' Import, format and option to preprocess omics data for integration
 #'
-#' @param rnaseq_counts Matrix of RNAseq counts
-#' @param metab_peaks Matrix of metabolite peaks
-#' @param rrbs_mvals Matrix of RRBS m-values
-#' @param mirna_counts Matrix of microRNA counts
-#' @param pirna_counts Matrix of piRNA counts
-#' @param meta Metadata, must have sample ids in first column matching those in omics data and treatment col called TRT
+#' @param rnaseq_counts Data matrix of RNAseq counts
+#' @param metab_peaks Data matrix of metabolite peaks
+#' @param rrbs_mvals Data matrix of RRBS m-values
+#' @param mirna_counts Data matrix of microRNA counts
+#' @param pirna_counts Data matrix of piRNA counts
+#' @param meta Metadata, must have sample ids in first column matching those in omics data and treatment col called TRT, if batch correction is required must also have unique batch column for each omics layer with batches.
 #' @param norm Normalization, True or False
 #' @param batch Omics layers with batches corresponding to "batch_omic" columns in metadata, column labels as follows: batch_rna, batch_metab, batch_rrbs
 #'
@@ -61,7 +61,7 @@ import_MO <- function(rnaseq_counts = NULL,
       dir.create(cdir)
 
     ## filter, normalize, scale
-    #rnaseq
+    #RNAseq
     if(!is.null(data_list$rnaseq_counts)) {
       print("normalizing RNAseq counts with edgeR TMM")
       grDevices::pdf(file = paste0(cdir, "/", "rnaseq_norm_filter.pdf"))
