@@ -17,7 +17,8 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
   cdir <- gsub(":", ".", cdir)
   dir.create(cdir)
 
-  ##Integrate
+  # Integrate
+
   int_method <- match.arg(int_method)
   cat("Using",int_method,"in as integration method\n")
   X <- list()
@@ -25,22 +26,19 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
     X[[i]] <- as.data.frame(t(data_list[[i]]))
   }
 
-  #mixOmics
+  ## mixOmics
+
+  ### limit to top variable features by MAD
   if(int_method == "sPLS-DA"){
-    if(!is.null(X$rnaseq_counts)){
-      if(ncol(X$rnaseq_counts) > 10000){
-        X$rnaseq_counts <- X$rnaseq_counts[, order(apply(X$rnaseq_counts, 2, mad), decreasing = TRUE)[1:10000]]
-        cat("Limiting rnaseq_counts to top 10,000 most variable features using median absolute deviation\n")
-      }else{
-        cat("Using all", ncol(X$rnaseq_counts), "rnaseq_counts features\n")
+    for( i in names(X)){
+      if(!is.null(X[[i]])){
+        if(ncol(X[[i]]) > 10000){
+          X[[i]] <- X[[i]][, order(apply(X[[i]], 2, mad), decreasing = TRUE)[1:10000]]
+          cat("Limiting ", i,"to top 10,000 most variable features using median absolute deviation\n")
+        }else{
+          cat("Using all", ncol(X[[i]]), "rnaseq_counts features\n")
         }
-    }
-    if(!is.null(X$rrbs_mvals)){
-      if(ncol(X$rrbs_mvals) > 10000){
-        X$rrbs_mvals <- X$rrbs_mvals[, order(apply(X$rrbs_mvals, 2, mad), decreasing = TRUE)[1:10000]]
-        cat("Limiting rrbs_mvals to top 10,000 most variable features using median avsolute deviation\n")
-      }else{
-        cat("Using all", ncol(X$rrbs_mvals), "rrbs_mvals features\n")}
+      }
     }
     Y <- as.factor(meta$TRT)
     # doing "data driven" approach to setting design matrix

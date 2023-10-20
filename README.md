@@ -18,18 +18,21 @@ Example usage
 import_MO(rnaseq_counts = counts, rrbs_mvals = mvals, meta = meta) #minimum of 2 omics required, default normalization = TRUE
 import_MO(rnaseq_counts = counts, rrbs_mvals = mvals, metab_peaks = metab, meta = meta, batch = “batch_rna”) #will normalize all three data layers and correct for batch in RNAseq data
 ```
+## Output
 This function will save a data list “data_list” to the global environment. The elements of this list are composed of the omics layers provided. If the normalization option is set to “true” this function will also output a MOnorm folder to the current working directory. This folder will be labeled with the current date and time, so rerunning will not overwrite previous results. This folder will contain visualizations of the omics layers provided including boxplots, PCA, scree, and MDS plots. 
 
 ## Normalization 
 The following steps are executed if norm = TRUE
 ### RNAseq counts
 Features with low counts are removed with the filterByExpr() function in edgeR. Log2 counts per million adjusted for library size are calculated and saved for integration. Library size is normalized using the trimmed means of m-values method via calcNormFactors() in edgeR. Counts are extracted using cpm(x, log = TRUE, normalized.lib.sizes = TRUE).
-If batch correction is indicated with batch = “rnaseq_counts” correction is carried out with ComBat()
-## Metabolite sum peak area
-Metabolite feature processing was chosen to match standard protocol already in use within EPA. Feature values are multiplied by 1000, rows are mean centered, and values are pareto scaled using pareto_scale() from the IMIFA package.
+If batch correction is indicated with batch = “rnaseq_counts” correction is carried out with ComBat() from the sva package.
+### Metabolite sum peak area
+Metabolite feature processing was chosen to match standard protocol already in use within EPA. Feature values are first multiplied by 1000, this is done so results match those of metaboanalyst, which is commonly used within EPA. Then rows are mean centered and values are pareto scaled using pareto_scale() from the IMIFA package.
 
-## miRNA and piRNA
-There is currently no normalization procedure carried out by import_MO for these data types. MIB has yet to measure these data types in a multi-omics study and they may be removed.
+### miRNA and piRNA
+There is currently no normalization procedure carried out by import_MO() for these data types. MIB has yet to measure these data types in a multi-omics study and they may be removed in future versions of this package.
 
-## RRBS M-values
+### RRBS M-values
 These features do not require normalization. To generate m-values from RRBS Bismark files see the formatRRBS package.
+
+

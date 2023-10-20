@@ -16,17 +16,17 @@ import_MO(
 )
 }
 \arguments{
-\item{rnaseq_counts}{Matrix of RNAseq counts}
+\item{rnaseq_counts}{Data matrix of RNAseq counts}
 
-\item{metab_peaks}{Matrix of metabolite peaks}
+\item{metab_peaks}{Data matrix of metabolite peaks}
 
-\item{rrbs_mvals}{Matrix of RRBS m-values}
+\item{rrbs_mvals}{Data matrix of RRBS m-values}
 
-\item{mirna_counts}{Matrix of microRNA counts}
+\item{mirna_counts}{Data matrix of microRNA counts}
 
-\item{pirna_counts}{Matrix of piRNA counts}
+\item{pirna_counts}{Data matrix of piRNA counts}
 
-\item{meta}{Metadata, must have sample ids in first column matching those in omics data and treatment col called TRT}
+\item{meta}{Metadata, must have sample ids in first column matching those in omics data and treatment col called TRT, if batch correction is required must also have unique batch column for each omics layer with batches.}
 
 \item{norm}{Normalization, True or False}
 
