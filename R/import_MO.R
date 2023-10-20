@@ -70,13 +70,15 @@ import_MO <- function(rnaseq_counts = NULL,
       keep <- edgeR::filterByExpr(y)
       y <- y[keep,,keep.lib.sizes = FALSE]
       y <- edgeR::calcNormFactors(y)
+      print("RNAseq viz")
       data_list$rnaseq_counts <- edgeR::cpm(y, log = TRUE, normalized.lib.sizes = TRUE) #trying log transformed data
       if("rnaseq_counts" %in% batch){
         print("RNAseq batch correction with ComBat")
         data_list$rnaseq_counts <- sva::ComBat(data_list$rnaseq_counts, meta$batch_rna, mod = as.factor(meta$TRT))
 
       }
-      select_rows <- sample(nrow(data_list$rnaseq_counts), length(rownames(data_list$rnaseq_counts)) * .2) #sub-setting %20 of rows for plots
+      #sub-setting %20 of rows for plots
+      select_rows <- sample(nrow(data_list$rnaseq_counts), length(rownames(data_list$rnaseq_counts)) * .2)
       suppressWarnings(graphics::boxplot(data_list$rnaseq_counts[select_rows, ],
                                main = paste("log2 filter & TMM norm counts\n n=",
                                length(data_list$rnaseq_counts[, 1])), las = 2))
@@ -96,7 +98,7 @@ import_MO <- function(rnaseq_counts = NULL,
       plot(pr$x[, 1], pr$x[, 2], col = TRTColor, main = 'RNAseq norm principal components 1 & 2', pch = 16, cex = 2,
            xlab = paste0("Principal Component 1 %", round(proportion_variance[1], 2)),
            ylab = paste0("Principal Component 2 %", round(proportion_variance[2], 2)))
-      legend('topright', inset=c(-0.3, 0),legend = unique(y$samples$group), fill = unique(TRTColor),
+      legend('topright', inset = c(-0.3, 0),legend = unique(y$samples$group), fill = unique(TRTColor),
              bg = "transparent", bty = "n", title = "Treatment")
       plot(pr$x[, 3], pr$x[, 4], col = TRTColor, main = 'RNAseq norm principal components 3 & 4', pch = 16, cex = 2,
           xlab = paste0("Principal Component 3 %", round(proportion_variance[3], 2)),
@@ -145,11 +147,12 @@ import_MO <- function(rnaseq_counts = NULL,
         data_list$rrbs_mvals <- sva::ComBat(data_list$rnaseq_counts, meta$batch_rrbs, mod = as.factor(meta$TRT))
 
       }
+      print("RRBS viz")
       grDevices::pdf(file = paste0(cdir, "/", "rrbs_boxplot.pdf"))
       #sub-setting %20 of rows for plots
       select_rows <- sample(nrow(data_list$rrbs_mvals), length(rownames(data_list$rrbs_mvals)) * .2)
       suppressWarnings(graphics::boxplot(data_list$rrbs_mvals[select_rows, ],
-                               main = paste("rrbs counts\n features=",
+                               main = paste("rrbs features=",
                                length(data_list$rrbs_mvals[, 1])), las = 2))
       grDevices::dev.off()
       #MDS

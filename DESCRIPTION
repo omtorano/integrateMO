@@ -1,9 +1,9 @@
-Package: FKAmoli
+Package: importMO
 Title: Preprocess and Integrate Multi-omics Data Wrapper
 Version: 0.0.0.9000
 Authors@R: 
     person("Olivia", "Torano", , "torano.olivia@epa.gov", role = c("aut", "cre"))
-Description: Provides a wrapper for xyz preprocessing methods and xyz integration methods for xyz data types.
+Description: Provides a wrapper for omics data preprocessing and integration methods for common tox data types.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
