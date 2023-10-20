@@ -39,7 +39,9 @@ import_MO <- function(rnaseq_counts = NULL,
 
           #rownames of data should match metadata
           for(i in 1:length(rownames(data_list[[j]]))) {
-            if (rownames(data_list[[j]])[i] != rownames(meta)[i])stop(j, " sample ", i, " name does not match metadata")
+            if (rownames(data_list[[j]])[i] != rownames(meta)[i]){
+              stop(j, " sample ", i, " name does not match metadata")
+            }
           }
           data_list[[j]] <- as.data.frame(t(data_list[[j]]))
         }
@@ -47,7 +49,9 @@ import_MO <- function(rnaseq_counts = NULL,
 
           #colnames of data should match metadata
           for(i in 1:length(colnames(data_list[[j]]))) {
-            if (colnames(data_list[[j]])[i] != rownames(meta)[i])stop(j, " sample ", i, " name does not match metadata")
+            if (colnames(data_list[[j]])[i] != rownames(meta)[i]){
+              stop(j, " sample ", i, " name does not match metadata")
+            }
           }}
       }}
 
@@ -65,7 +69,7 @@ import_MO <- function(rnaseq_counts = NULL,
       # sub-setting %20 of rows for plots
       select_rows <- sample(nrow(data_list$rnaseq_counts), length(rownames(data_list$rnaseq_counts)) * .2)
       suppressWarnings(graphics::boxplot(log2(data_list$rnaseq_counts[select_rows, ] + 1),
-                               main = paste("log2 raw counts\n n=", length(data_list$rnaseq_counts[, 1])), las = 2))
+                       main = paste("log2 raw counts\n n =", length(data_list$rnaseq_counts[, 1])), las = 2))
       y <- edgeR::DGEList(counts = data_list$rnaseq_counts, group = meta$TRT)
       keep <- edgeR::filterByExpr(y)
       y <- y[keep,,keep.lib.sizes = FALSE]
@@ -80,44 +84,44 @@ import_MO <- function(rnaseq_counts = NULL,
       #sub-setting %20 of rows for plots
       select_rows <- sample(nrow(data_list$rnaseq_counts), length(rownames(data_list$rnaseq_counts)) * .2)
       suppressWarnings(graphics::boxplot(data_list$rnaseq_counts[select_rows, ],
-                               main = paste("log2 filter & TMM norm counts\n n=",
+                               main = paste("log2 low expression filter &\n TMM norm counts\n n =",
                                length(data_list$rnaseq_counts[, 1])), las = 2))
       grDevices::dev.off()
       #Normalization independent visualizations
       #PCA
-      grDevices::pdf(file = paste0(cdir, "/", "rnaseq_norm_PCA.pdf"))
+      grDevices::pdf(file = paste0(cdir, "/", "rnaseq_norm_PCAs_scree.pdf"))
       TRTColor <- as.numeric(y$samples$group) + .01
       #TRT can only be 5 here
-      color_options<-c("red3", "coral","green3", "purple", "black")
+      color_options<-c("red3", "coral","green3", "purple", "black", "blue")
       for(i in 1:length(unique(TRTColor))) {
         TRTColor <- gsub(unique(TRTColor)[i], color_options[i], TRTColor)
       }
       pr <- stats::prcomp(t(data_list$rnaseq_counts), center = TRUE)
       proportion_variance <- pr$sdev^2 / sum(pr$sdev^2) * 100
       par(mar=c(5.1, 4.1, 4.1, 8.1), xpd = TRUE)
-      plot(pr$x[, 1], pr$x[, 2], col = TRTColor, main = 'RNAseq norm principal components 1 & 2', pch = 16, cex = 2,
+      plot(pr$x[, 1], pr$x[, 2], col = TRTColor, main = 'RNAseq norm principal components 1 & 2', pch = 16, cex = 1.5,
            xlab = paste0("Principal Component 1 %", round(proportion_variance[1], 2)),
            ylab = paste0("Principal Component 2 %", round(proportion_variance[2], 2)))
       legend('topright', inset = c(-0.3, 0),legend = unique(y$samples$group), fill = unique(TRTColor),
              bg = "transparent", bty = "n", title = "Treatment")
-      plot(pr$x[, 3], pr$x[, 4], col = TRTColor, main = 'RNAseq norm principal components 3 & 4', pch = 16, cex = 2,
+      plot(pr$x[, 3], pr$x[, 4], col = TRTColor, main = 'RNAseq norm principal components 3 & 4', pch = 16, cex = 1.5,
           xlab = paste0("Principal Component 3 %", round(proportion_variance[3], 2)),
           ylab = paste0("Principal Component 4 %", round(proportion_variance[4], 2)))
       legend('topright', inset = c(-0.3, 0),legend = unique(y$samples$group), fill = unique(TRTColor),
              bg = "transparent", bty = "n", title = "Treatment")
       par(mar = c(5.1, 4.1, 4.1, 2.1))
       #scree plot
-      bp <- barplot(proportion_variance[1:20], ylab = "Proportion variance", xlab = "PCs",
-                    names.arg = c(1:20), col = rep("black", 20), main = "RNAseq scree plot")
+      bp <- barplot(proportion_variance[1:20], ylab = "Proportion variance", xlab = "Principal Components",
+                    names.arg = c(1:20), col = rep("black", 20), main = "RNAseq scree plot", las = 2)
       text(bp, proportion_variance[1:20] - 0.5, labels = round(proportion_variance[1:20],
                                                             digits = 2), col = "white", cex = 0.5)
       grDevices::dev.off()
       #MDS
       grDevices::pdf(file = paste0(cdir, "/", "rnaseq_norm_PCoA_MDS.pdf"))
       par(mar = c(5.1, 4.1, 4.1, 8.1), xpd = TRUE)
-      limma::plotMDS(y, col = TRTColor, pch = 16, gene.selection = "pairwise", top = 500)
+      limma::plotMDS(y, col = TRTColor, pch = 16, gene.selection = "pairwise", top = 500, cex = 1.5)
       legend("topright", inset = c(-0.25, 0), legend = unique(y$samples$group), fill = unique(TRTColor),
-             bg = "transparent", bty = "n", title = "Treatment", cex = 0.5)
+             bg = "transparent", bty = "n", title = "Treatment", cex = 1)
       grDevices::dev.off()
     }
 
@@ -152,15 +156,15 @@ import_MO <- function(rnaseq_counts = NULL,
       #sub-setting %20 of rows for plots
       select_rows <- sample(nrow(data_list$rrbs_mvals), length(rownames(data_list$rrbs_mvals)) * .2)
       suppressWarnings(graphics::boxplot(data_list$rrbs_mvals[select_rows, ],
-                               main = paste("rrbs features=",
+                               main = paste("RRBS features =",
                                length(data_list$rrbs_mvals[, 1])), las = 2))
       grDevices::dev.off()
       #MDS
       grDevices::pdf(file = paste0(cdir, "/", "rrbs_PCoA_MDS.pdf"))
       par(mar = c(5.1, 4.1, 4.1, 8.1), xpd = TRUE)
-      limma::plotMDS(data_list$rrbs_mvals, col = TRTColor, pch = 16, gene.selection = "pairwise", top = 500)
+      limma::plotMDS(data_list$rrbs_mvals, col = TRTColor, pch = 16, gene.selection = "pairwise", top = 500, cex = 1.5)
       legend('topright', inset = c(-0.25, 0), legend = unique(y$samples$group), fill = unique(TRTColor),
-             bg = "transparent", bty = "n", title = "Treatment", cex = .5)
+             bg = "transparent", bty = "n", title = "Treatment", cex = 1)
       grDevices::dev.off()
     }
     #mirna

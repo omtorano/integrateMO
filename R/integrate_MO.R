@@ -1,10 +1,11 @@
 #' Multi-omics integration for toxicology data
 #'
 #' @param int_method sPLS-DA, MOFA2, WGCNA, or SNF
+#' @param RRBS_feature_map dataframe of RRBS features to genes, must match format of Unique_Features_to_Genes.csv from formatRRBS output
 #'
 #' @return output
 #' @export
-integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA")){
+integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA"), RRBS_feature_map = NULL){
 
   #stop if metadata not provided
   if(is.null(meta)) stop("No metadata provided, run import function")
@@ -12,7 +13,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
   #stop if data are not provided
   if(is.null(data_list)) stop("No data provided, run import function")
 
-  cdir <- paste("FKAmoli", int_method, Sys.time(), sep = "_")
+  cdir <- paste("integrateMO", int_method, Sys.time(), sep = "_")
   cdir <- gsub(":", ".", cdir)
   dir.create(cdir)
 
@@ -29,20 +30,20 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
     if(!is.null(X$rnaseq_counts)){
       if(ncol(X$rnaseq_counts) > 10000){
         X$rnaseq_counts <- X$rnaseq_counts[, order(apply(X$rnaseq_counts, 2, mad), decreasing = TRUE)[1:10000]]
-        cat("Limiting rnaseq_counts to top 10,000 most variable features using MAD\n")
+        cat("Limiting rnaseq_counts to top 10,000 most variable features using median absolute deviation\n")
       }else{
         cat("Using all", ncol(X$rnaseq_counts), "rnaseq_counts features\n")
         }
     }
-    if(!is.null(X$rrbs_counts)){
-      if(ncol(X$rrbs_counts) > 10000){
-        X$rrbs_counts <- X$rrbs_counts[, order(apply(X$rrbs_counts, 2, mad), decreasing = TRUE)[1:10000]]
-        cat("Limiting rrbs_counts to top 10,000 most variable features using MAD\n")
+    if(!is.null(X$rrbs_mvals)){
+      if(ncol(X$rrbs_mvals) > 10000){
+        X$rrbs_mvals <- X$rrbs_mvals[, order(apply(X$rrbs_mvals, 2, mad), decreasing = TRUE)[1:10000]]
+        cat("Limiting rrbs_mvals to top 10,000 most variable features using median avsolute deviation\n")
       }else{
-        cat("Using all", ncol(X$rrbs_counts), "rrbs_counts features\n")}
+        cat("Using all", ncol(X$rrbs_mvals), "rrbs_mvals features\n")}
     }
     Y <- as.factor(meta$TRT)
-    #doing "data driven" approach to setting design matrix
+    # doing "data driven" approach to setting design matrix
     test_combo <- gtools::combinations(n = length(X), r = 2, v = 1:length(X))
     test_vec <- vector()
     for (i in nrow(test_combo)){
@@ -54,60 +55,61 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
     design <- matrix(test_vec, ncol = length(X), nrow = length(X),
                      dimnames = list(names(X), names(X)))
     diag(design) <- 0
-    diablo.tcga <- mixOmics::block.plsda(X, Y, ncomp = length(unique(meta$TRT)) + 1, design = design)
-    perf.diablo.tcga <- mixOmics::perf(diablo.tcga, validation = "Mfold", folds = min(table(meta$TRT)), nrepeat = 10)
-    ncomp <- min(perf.diablo.tcga$choice.ncomp$WeightedVote[2,])
-    #dist_name <- colnames(perf.diablo.tcga$choice.ncomp$WeightedVote[,perf.diablo.tcga$choice.ncomp$WeightedVote[2,]==ncomp])[1]
-    dist_name <- colnames(perf.diablo.tcga$error.rate[[1]])[which(perf.diablo.tcga$error.rate[[1]] == min(perf.diablo.tcga$error.rate[[1]]), arr.ind = TRUE)[[2]]]
+    diablo.mo <- mixOmics::block.plsda(X, Y, ncomp = length(unique(meta$TRT)) + 1, design = design)
+    perf.diablo.mo <- mixOmics::perf(diablo.mo, validation = "Mfold", folds = min(table(meta$TRT)), nrepeat = 10)
+    ncomp <- min(perf.diablo.mo$choice.ncomp$WeightedVote[2,])
+    # dist_name <- colnames(perf.diablo.mo$choice.ncomp$WeightedVote[,perf.diablo.mo$choice.ncomp$WeightedVote[2,]==ncomp])[1]
+    dist_name <- colnames(perf.diablo.mo$error.rate[[1]])[which(perf.diablo.mo$error.rate[[1]] == min(perf.diablo.mo$error.rate[[1]]),
+                                                                  arr.ind = TRUE)[[2]]]
     grDevices::pdf(file = paste0(cdir, "/", "mixOmics_classification_error_rate.pdf"))
-    plot(perf.diablo.tcga)
-    graphics::mtext(paste0("comp=", ncomp, " dist=", dist_name), side = 3)
+    plot(perf.diablo.mo)
+    graphics::mtext(paste0("comp =", ncomp, " dist =", dist_name), side = 3)
     grDevices::dev.off()
     test.keepX <- list()
     for( i in names(X)){
       test.keepX[[i]] <- c(5:9, seq(10, 25, 5))
     }
     for (i in dist_name){
-      tune.diablo.tcga <- mixOmics::tune.block.splsda(X, Y, ncomp = ncomp,
+      tune.diablo.mo <- mixOmics::tune.block.splsda(X, Y, ncomp = ncomp,
                                             test.keepX = test.keepX, design = design,
-                                            validation = "Mfold", folds = 5, nrepeat = 1,
+                                            validation = "Mfold", folds = 5, nrepeat = 10,
                                             # use two CPUs for faster computation
                                             #BPPARAM = BiocParallel::SnowParam(workers = 2),
                                             dist = i) # should this error rate match multiomics_pdf?
     }
-    list.keepX <- tune.diablo.tcga$choice.keepX
-    diablo.tcga <- mixOmics::block.splsda(X, Y, ncomp = ncomp,
+    list.keepX <- tune.diablo.mo$choice.keepX
+    diablo.mo <- mixOmics::block.splsda(X, Y, ncomp = ncomp,
                                           keepX = list.keepX)
     for ( i in 1:ncomp){
       values<-vector()
       for ( j in 1:length(X)){
-        values<-rbind(values, as.data.frame(mixOmics::selectVar(diablo.tcga, comp = i)[[j]][2]))
+        values<-rbind(values, as.data.frame(mixOmics::selectVar(diablo.mo, comp = i)[[j]][2]))
       }
       utils::write.table(values, paste(cdir, "/", "splsda_variables_comp", i, ".csv"))
     }
     if(ncomp > 1){
       grDevices::pdf(file = paste0(cdir, "/", "mixOmics_plotVar.pdf"))
-      mixOmics::plotVar(diablo.tcga, var.names = c(TRUE), style = "graphics", legend = TRUE,
-                        title = "DIABLO comp 1 - 2")
+      mixOmics::plotVar(diablo.mo, var.names = c(TRUE), style = "graphics", legend = TRUE,
+                        title = "DIABLO components 1 - 2")
       grDevices::dev.off()
       grDevices::pdf(file = paste0(cdir, "/", "mixOmics_plotIndiv.pdf"))
-      mixOmics::plotIndiv(diablo.tcga, ind.names = FALSE, legend = TRUE, comp=c(1, 2),
-                          title = "DIABLO comp 1 - 2", block = "weighted.average")
+      mixOmics::plotIndiv(diablo.mo, ind.names = FALSE, legend = TRUE, comp = c(1, 2),
+                          title = "DIABLO components 1 - 2", block = "weighted.average")
       grDevices::dev.off()
       for(i in names(X)){
         grDevices::pdf(file = paste0(cdir, "/", "mixOmics_auroc_", i, ".pdf"))
-        auc.diablo.tcga <- mixOmics::auroc(diablo.tcga, roc.block = i, roc.comp = ncomp,
+        auc.diablo.mo <- mixOmics::auroc(diablo.mo, roc.block = i, roc.comp = ncomp,
                                            print = FALSE)
         grDevices::dev.off()
       }
     }
   }
 
-  #WGCNA - counts need to be vst or log2
+  # WGCNA - counts need to be vst or log2
   if(int_method == "WGCNA"){
-    if(!is.null(X$rrbs_counts)){
-      X$rrbs_counts <- X$rrbs_counts[, order(apply(X$rrbs_counts, 2, mad), decreasing = TRUE)[1:(.25 * ncol(X$rrbs_counts))]]
-      cat("Limiting rrbs_counts to top", ncol(X$rrbs_counts), "most variable using MAD\n")}
+    if(!is.null(X$rrbs_mvals)){
+      X$rrbs_mvals <- X$rrbs_mvals[, order(apply(X$rrbs_mvals, 2, mad), decreasing = TRUE)[1:(.25 * ncol(X$rrbs_mvals))]]
+      cat("Limiting rrbs_mvals to top", ncol(X$rrbs_mvals), "most variable using median absolute deviation\n")}
     lowcount_omics_MEs <- list()
     block_MEs <- list()
     TRT_number <- meta$TRT
@@ -139,11 +141,11 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
              xlab = "Soft Threshold (power)", ylab = "Scale Free Topology Model Fit,signed R^2", type = "n",
              main = paste("Scale independence"));
         graphics::text(sft$fitIndices[, 1], -sign(sft$fitIndices[, 3]) * sft$fitIndices[, 2],
-             labels = powers, cex = .9, col = color_forplot)
+             labels = powers, cex = 0.9, col = color_forplot)
         plot(sft$fitIndices[, 1], sft$fitIndices[, 5],
              xlab = "Soft Threshold (power)", ylab = "Mean Connectivity", type = "n",
              main = paste("Mean connectivity"))
-        graphics::text(sft$fitIndices[, 1], sft$fitIndices[, 5], labels = powers, cex = .9, col = color_forplot)
+        graphics::text(sft$fitIndices[, 1], sft$fitIndices[, 5], labels = powers, cex = 0.9, col = color_forplot)
         grDevices::dev.off()
         adjacency <- WGCNA::adjacency(X$metab_peaks, power = power_from_sft)
         TOM <- WGCNA::TOMsimilarity(adjacency)
@@ -179,7 +181,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
         # Eigengenes of the new merged modules:
         mergedMEs <- merge$newMEs
         grDevices::pdf(file = paste0(cdir, "/", i, "_dendrogram"))
-        WGCNA:: plotDendroAndColors(geneTree, cbind(dynamicColors, mergedColors),
+        WGCNA::plotDendroAndColors(geneTree, cbind(dynamicColors, mergedColors),
                                     c("Dynamic Tree Cut", "Merged dynamic"),
                                     dendroLabels = FALSE, hang = 0.03,
                                     addGuide = TRUE, guideHang = 0.05)
@@ -208,7 +210,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
         plot(sft$fitIndices[, 1], sft$fitIndices[, 5],
              xlab = "Soft Threshold (power)", ylab = "Mean Connectivity", type = "n",
              main = paste("Mean connectivity"))
-        graphics::text(sft$fitIndices[, 1], sft$fitIndices[, 5], labels = powers, cex = .9, col = color_forplot)
+        graphics::text(sft$fitIndices[, 1], sft$fitIndices[, 5], labels = powers, cex = 0.9, col = color_forplot)
         grDevices::dev.off()
         #could do saveTOMd=FALSE
         bwnet <- WGCNA::blockwiseModules(X[[i]], maxBlockSize = 5000,
@@ -252,7 +254,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
                     signif(moduleTraitPvalue, 1), ")")
       dim(textMatrix) <- dim(moduleTraitCor)
       pdf_name <- paste(names(X)[MEs_combo[v, 1]], names(X)[MEs_combo[v, 2]], "module_relationship.pdf", sep = "_")
-      grDevices::pdf(file = paste0(cdir, "/" ,pdf_name))
+      grDevices::pdf(file = paste0(cdir, "/", pdf_name))
       # Display the correlation values within a heatmap plot
       graphics::par(mar = c(4, 7, 2, 2))
       WGCNA::labeledHeatmap(Matrix = moduleTraitCor,
@@ -275,9 +277,9 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
     # for (i in names(X)){
     #    X[[i]]<-as.data.frame(t(X[[i]]))
     #  }
-    if(!is.null(X$rrbs_counts)){
-      X$rrbs_counts <- X$rrbs_counts[, order(apply(X$rrbs_counts, 2, mad), decreasing = TRUE)[1:(.25 * ncol(X$rrbs_counts))]]
-      cat("Limiting rrbs_counts to top", ncol(X$rrbs_counts), "most variable using MAD\n")}
+    if(!is.null(X$rrbs_mvals)){
+      X$rrbs_mvals <- X$rrbs_mvals[, order(apply(X$rrbs_mvals, 2, mad), decreasing = TRUE)[1:(.25 * ncol(X$rrbs_mvals))]]
+      cat("Limiting rrbs_mvals to top", ncol(X$rrbs_mvals), "most variable using median absolute deviation\n")}
     if(length(meta$sample) < 20){
       K <- length(meta$sample) - 1
     }else{K <- 20}
@@ -299,7 +301,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
     }
     grDevices::pdf(file = paste0(cdir, "/" , "SNF_cluster_heatmap.pdf"))
     SNFtool::displayClustersWithHeatmap(W, group, ColSideColors = cbind(as.character(TRT_number), as.character(group))) #hack this to be better https://rdrr.io/cran/SNFtool/src/R/displayClustersWithHeatmap.R
-    graphics::legend("topleft", legend = unique(group), fill = unique(group), cex = .8)
+    graphics::legend("topleft", legend = unique(group), fill = unique(group), cex = 0.8)
     grDevices::dev.off()
     #diag(W)=0 #which of these is correct?
     #diag(W)=max(W) #is correct? https://rdrr.io/bioc/CancerSubtypes/src/R/ClusteringMethod.R

@@ -4,10 +4,15 @@
 \alias{integrate_MO}
 \title{Multi-omics integration for toxicology data}
 \usage{
-integrate_MO(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA"))
+integrate_MO(
+  int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA"),
+  RRBS_feature_map = NULL
+)
 }
 \arguments{
 \item{int_method}{sPLS-DA, MOFA2, WGCNA, or SNF}
+
+\item{RRBS_feature_map}{dataframe of RRBS features to genes, must match format of Unique_Features_to_Genes.csv from formatRRBS output}
 }
 \value{
 output
