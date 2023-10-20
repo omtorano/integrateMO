@@ -21,7 +21,7 @@ importFKAmoli <- function(rnaseq_counts = NULL,
                         norm = TRUE,
                         batch = NULL) {
 
-    #stop if metadata not provided
+    # stop if metadata not provided
     if(is.null(meta)) stop("No metadata provided")
 
     #stop if data are not provided
