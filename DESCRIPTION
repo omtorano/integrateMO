@@ -22,4 +22,5 @@ Imports:
 	plotrix,
 	dynamicTreeCut,
 	fastcluster,
-	WGCNA
+	WGCNA,
+	sva

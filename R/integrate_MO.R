@@ -4,7 +4,7 @@
 #'
 #' @return output
 #' @export
-FKAmoli <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA")){
+integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA")){
 
   #stop if metadata not provided
   if(is.null(meta)) stop("No metadata provided, run import function")

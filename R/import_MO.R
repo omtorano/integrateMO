@@ -12,7 +12,7 @@
 #' @return formatted data_list for integration
 #' @export
 #'
-importFKAmoli <- function(rnaseq_counts = NULL,
+import_MO <- function(rnaseq_counts = NULL,
                         metab_peaks = NULL,
                         rrbs_mvals = NULL,
                         mirna_counts = NULL,
@@ -170,4 +170,4 @@ importFKAmoli <- function(rnaseq_counts = NULL,
       assign("meta", meta, envir = .GlobalEnv)
     }
 
-    }
+  }
