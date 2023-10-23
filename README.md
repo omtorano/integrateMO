@@ -18,6 +18,7 @@ Example usage
 import_MO(rnaseq_counts = counts, rrbs_mvals = mvals, meta = meta) #minimum of 2 omics required, default normalization = TRUE
 import_MO(rnaseq_counts = counts, rrbs_mvals = mvals, metab_peaks = metab, meta = meta, batch = “batch_rna”) #will normalize all three data layers and correct for batch in RNAseq data
 ```
+The orientation of the omics data matricies does not matter. Samples can be either row names or column names and features can be row names or column names. Sample names must be either row or column names (i.e. not the first row or first column) and must match the row names of the metadata.
 ## Output
 This function will save a data list “data_list” to the global environment. The elements of this list are composed of the omics layers provided. If the normalization option is set to “true” this function will also output a MOnorm folder to the current working directory. This folder will be labeled with the current date and time, so rerunning will not overwrite previous results. This folder will contain visualizations of the omics layers provided including boxplots, PCA, scree, and MDS plots. 
 

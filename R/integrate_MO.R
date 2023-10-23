@@ -72,7 +72,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
                                             test.keepX = test.keepX, design = design,
                                             validation = "Mfold", folds = 5, nrepeat = 10,
                                             # use two CPUs for faster computation
-                                            #BPPARAM = BiocParallel::SnowParam(workers = 2),
+                                            BPPARAM = BiocParallel::SnowParam(workers = parallel::detectCores()),
                                             dist = i) # should this error rate match multiomics_pdf?
     }
     list.keepX <- tune.diablo.mo$choice.keepX
@@ -83,21 +83,39 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
       for ( j in 1:length(X)){
         values<-rbind(values, as.data.frame(mixOmics::selectVar(diablo.mo, comp = i)[[j]][2]))
       }
-      utils::write.table(values, paste(cdir, "/", "splsda_variables_comp", i, ".csv"))
+      utils::write.table(values, paste0(cdir, "/", "splsda_variables_comp", i, ".csv"))
     }
     if(ncomp > 1){
-      grDevices::pdf(file = paste0(cdir, "/", "mixOmics_plotVar.pdf"))
+      grDevices::pdf(file = paste0(cdir, "/", "mixOmics_plotVar1-2.pdf"))
       mixOmics::plotVar(diablo.mo, var.names = c(TRUE), style = "graphics", legend = TRUE,
                         title = "DIABLO components 1 - 2")
       grDevices::dev.off()
-      grDevices::pdf(file = paste0(cdir, "/", "mixOmics_plotIndiv.pdf"))
+      if(ncomp == 4){
+        grDevices::pdf(file = paste0(cdir, "/", "mixOmics_plotVar3-4.pdf"))
+        mixOmics::plotVar(diablo.mo, var.names = c(TRUE), style = "graphics", legend = TRUE,
+                          comp = c(3, 4), title = "DIABLO components 3 - 4")
+        grDevices::dev.off()
+      }
+      grDevices::pdf(file = paste0(cdir, "/", "mixOmics_plotIndiv1-2.pdf"))
       mixOmics::plotIndiv(diablo.mo, ind.names = FALSE, legend = TRUE, comp = c(1, 2),
                           title = "DIABLO components 1 - 2", block = "weighted.average")
       grDevices::dev.off()
+      if(ncomp == 4){
+        grDevices::pdf(file = paste0(cdir, "/", "mixOmics_plotIndiv3-4.pdf"))
+        mixOmics::plotIndiv(diablo.mo, ind.names = FALSE, legend = TRUE, comp = c(3, 4),
+                            title = "DIABLO components 3 - 4", block = "weighted.average")
+        grDevices::dev.off()
+      }
+      for(i in 1:ncomp){
+        grDevices::pdf(file = paste0(cdir, "/", "mixOmics_cim", i, ".pdf"))
+        mixOmics::cimDiablo(diablo.mo, comp = i, margin=c(11, 15), legend.position = "topright",
+                            trim = FALSE, size.legend = 0.7)
+        grDevices::dev.off()
+      }
       for(i in names(X)){
         grDevices::pdf(file = paste0(cdir, "/", "mixOmics_auroc_", i, ".pdf"))
         auc.diablo.mo <- mixOmics::auroc(diablo.mo, roc.block = i, roc.comp = ncomp,
-                                           print = FALSE)
+                                         print = FALSE)
         grDevices::dev.off()
       }
     }
