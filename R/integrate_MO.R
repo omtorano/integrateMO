@@ -228,7 +228,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
         power_from_sft <- sft$fitIndices[sft$fitIndices$SFT.R.sq == max(sft$fitIndices$SFT.R.sq[1:10]), 1]
         color_forplot <- rep("black", length(sft$fitIndices$Power))
         color_forplot[power_from_sft] <- "red"
-        grDevices::pdf(file = paste0(cdir, "/", i, "_soft_threasholding.pdf"))
+        grDevices::pdf(file = paste0(cdir, "/", "soft_threasholding_", i, ".pdf"))
         graphics::par(mfrow = c(1, 2))
         # Plot the results:
         # Scale-free topology fit index as a function of the soft-thresholding power
@@ -256,7 +256,6 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
         bwModuleColors <- WGCNA::labels2colors(bwLabels)
         grDevices::pdf(file = paste0(cdir, "/", i, "_dendro.pdf"))
         if(length(bwnet$dendrograms) > 1){
-          #par does not work
           for (j in 1:length(bwnet$dendrograms)){
             WGCNA::plotDendroAndColors(bwnet$dendrograms[[j]], bwModuleColors[bwnet$blockGenes[[j]]],
                                        "Module colors", main = paste(i,"Dendro & module colors in block", j),
@@ -316,13 +315,13 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
       # testing module membership viz
       grDevices::pdf(file = paste0(cdir, "/", paste(names(X)[MEs_combo[v, 1]], names(X)[MEs_combo[v, 2]], "module_membership_subset.pdf", sep = "_")))
       graphics::par(cex.main = 1)
-      df <- unique(c(unlist(lapply(geneModuleMembership, function(x) tail(rownames(geneModuleMembership)[order(x, decreasing = TRUE)], n = 3))),
-                     unlist(lapply(geneModuleMembership, function(x) tail(rownames(geneModuleMembership)[order(x, decreasing = FALSE)], n = 3)))))
-      heatmap(as.matrix(geneModuleMembership[rownames(geneModuleMembership) %in% df, ]), main = paste("module membership of extreme", names(X)[MEs_combo[v, 1]]),
+      df <- unique(c(unlist(lapply(geneModuleMembership, function(x) utils::tail(rownames(geneModuleMembership)[order(x, decreasing = TRUE)], n = 3))),
+                     unlist(lapply(geneModuleMembership, function(x) utils::tail(rownames(geneModuleMembership)[order(x, decreasing = FALSE)], n = 3)))))
+      stats::heatmap(as.matrix(geneModuleMembership[rownames(geneModuleMembership) %in% df, ]), main = paste("module membership of extreme", names(X)[MEs_combo[v, 1]]),
               margins = c(8, 8))
-      df <- unique(c(unlist(lapply(geneModuleMembership2, function(x) tail(rownames(geneModuleMembership2)[order(x, decreasing = TRUE)], n = 3))),
-                     unlist(lapply(geneModuleMembership2, function(x) tail(rownames(geneModuleMembership2)[order(x, decreasing = FALSE)], n = 3)))))
-      heatmap(as.matrix(geneModuleMembership2[rownames(geneModuleMembership2) %in% df, ]), main = paste("module membership of extreme", names(X)[MEs_combo[v, 2]]),
+      df <- unique(c(unlist(lapply(geneModuleMembership2, function(x) utils::tail(rownames(geneModuleMembership2)[order(x, decreasing = TRUE)], n = 3))),
+                     unlist(lapply(geneModuleMembership2, function(x) utils::tail(rownames(geneModuleMembership2)[order(x, decreasing = FALSE)], n = 3)))))
+      stats::heatmap(as.matrix(geneModuleMembership2[rownames(geneModuleMembership2) %in% df, ]), main = paste("module membership of extreme", names(X)[MEs_combo[v, 2]]),
               margins = c(8, 8))
       grDevices::dev.off()
       }

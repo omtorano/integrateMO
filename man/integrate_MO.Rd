@@ -10,7 +10,7 @@ integrate_MO(
 )
 }
 \arguments{
-\item{int_method}{sPLS-DA, MOFA2, WGCNA, or SNF}
+\item{int_method}{sPLS-DA, MOFA2, WGCNA, SNF, or iPCA}
 
 \item{RRBS_feature_map}{dataframe of RRBS features to genes, must match format of Unique_Features_to_Genes.csv from formatRRBS output}
 }

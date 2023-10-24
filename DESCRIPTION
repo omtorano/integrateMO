@@ -23,4 +23,5 @@ Imports:
 	dynamicTreeCut,
 	fastcluster,
 	WGCNA,
-	sva
+	sva,
+	BiocParallel
