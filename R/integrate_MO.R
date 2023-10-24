@@ -125,37 +125,53 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
   if(int_method == "WGCNA"){
     if(!is.null(X$rrbs_mvals)){
       X$rrbs_mvals <- X$rrbs_mvals[, order(apply(X$rrbs_mvals, 2, mad), decreasing = TRUE)[1:(.25 * ncol(X$rrbs_mvals))]]
-      cat("Limiting rrbs_mvals to top", ncol(X$rrbs_mvals), "most variable using median absolute deviation\n")}
+      cat("Limiting rrbs_mvals to top", ncol(X$rrbs_mvals), "most variable using median absolute deviation\n")
+      }
     lowcount_omics_MEs <- list()
     block_MEs <- list()
     TRT_number <- meta$TRT
     for ( i in 1:length(unique(meta$TRT))){
       TRT_number <- gsub(unique(meta$TRT)[i], i, TRT_number)
-    }
+      }
     TRT_number <- as.numeric(TRT_number)
     traitColors <- WGCNA::numbers2colors(TRT_number, signed = FALSE)
     #rnaseq counts are already logged
     for (i in names(X)){
-      grDevices::pdf(file = paste0(cdir, "/", "WGCNA_hclust_", i, "_sampleTree.pdf"))
+      grDevices::pdf(file = paste0(cdir, "/", "hclust_", i, "_sampleTree.pdf"))
       sampleTree <- fastcluster::hclust(stats::dist(X[[i]]), method = "average")
       #cluster with metadata
-      WGCNA::plotDendroAndColors(sampleTree, traitColors,
-                                 groupLabels = colnames(meta)[2], #want this to say TRT, col depends on format
-                                 main = paste("Sample dendrogram and trait heatmap", i)) #could remove? or could use to relate two omic layers
+      WGCNA::plotDendroAndColors(fastcluster::hclust(stats::dist(X[[i]]), method = "single"), traitColors,
+                                 groupLabels = colnames(meta)[2],
+                                 main = paste("Single clustering dendro", i))
+      WGCNA::plotDendroAndColors(fastcluster::hclust(stats::dist(X[[i]]), method = "average"), traitColors,
+                                 groupLabels = colnames(meta)[2],
+                                 main = paste("Average clustering dendro", i))
+      WGCNA::plotDendroAndColors(fastcluster::hclust(stats::dist(X[[i]]), method = "complete"), traitColors,
+                                 groupLabels = colnames(meta)[2],
+                                 main = paste("Complete clustering dendro", i))
+      WGCNA::plotDendroAndColors(fastcluster::hclust(stats::dist(X[[i]]), method = "median"), traitColors,
+                                 groupLabels = colnames(meta)[2],
+                                 main = paste("Median clustering dendro", i))
+      WGCNA::plotDendroAndColors(fastcluster::hclust(stats::dist(X[[i]]), method = "mcquitty"), traitColors,
+                                 groupLabels = colnames(meta)[2],
+                                 main = paste("Mcquitty clustering dendro", i))
+      WGCNA::plotDendroAndColors(fastcluster::hclust(stats::dist(X[[i]]), method = "ward.D"), traitColors,
+                                 groupLabels = colnames(meta)[2],
+                                 main = paste("ward.D clustering dendro", i))
       grDevices::dev.off()
-      #module detection one step - for low feature count omic layers
-      if(length(X[[i]]) > 100 && length(X[[i]]) < 5000){ #if less than 100 features should not cluster?
+      # module detection one step - for low feature count omic layers but if very low dont need to cluster
+      if(length(X[[i]]) > 100 && length(X[[i]]) < 5000){
         powers = c(c(1:10), seq(from = 12, to = 40, by = 2))
         #allowWGCNAThreads()
         sft <- WGCNA::pickSoftThreshold(X[[i]], powerVector = powers, verbose = 0)
         power_from_sft <- sft$fitIndices[sft$fitIndices$SFT.R.sq == max(sft$fitIndices$SFT.R.sq[1:10]), 1]
         color_forplot <- rep("black", length(sft$fitIndices$Power))
         color_forplot[power_from_sft] <- "red"
-        grDevices::pdf(file = paste(cdir, "/", i, "soft threasholding"))
+        grDevices::pdf(file = paste(cdir, "/", "soft threasholding", i))
         graphics::par(mfrow = c(1, 2))
         plot(sft$fitIndices[, 1], -sign(sft$fitIndices[, 3]) * sft$fitIndices[, 2],
              xlab = "Soft Threshold (power)", ylab = "Scale Free Topology Model Fit,signed R^2", type = "n",
-             main = paste("Scale independence"));
+             main = paste("Scale independence"))
         graphics::text(sft$fitIndices[, 1], -sign(sft$fitIndices[, 3]) * sft$fitIndices[, 2],
              labels = powers, cex = 0.9, col = color_forplot)
         plot(sft$fitIndices[, 1], sft$fitIndices[, 5],
@@ -183,7 +199,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
         # Cluster module eigengenes
         METree <- fastcluster::hclust(stats::as.dist(MEDiss), method = "average")
         # Plot the result
-        grDevices::pdf(file = paste0(cdir, "/", i, "module_eigengene_clustering_cutoff"))
+        grDevices::pdf(file = paste0(cdir, "/", "module_eigengene_clustering_cutoff_"), i)
         plot(METree, main = paste("Clustering of", i, "module eigengenes"),
              xlab = "", sub = "")
         MEDissThres <- 0.25
@@ -196,7 +212,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
         mergedColors <- merge$colors
         # Eigengenes of the new merged modules:
         mergedMEs <- merge$newMEs
-        grDevices::pdf(file = paste0(cdir, "/", i, "_dendrogram"))
+        grDevices::pdf(file = paste0(cdir, "/", "dendrogram_", i))
         WGCNA::plotDendroAndColors(geneTree, cbind(dynamicColors, mergedColors),
                                     c("Dynamic Tree Cut", "Merged dynamic"),
                                     dendroLabels = FALSE, hang = 0.03,
@@ -205,7 +221,6 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
         lowcount_omics_MEs[[i]] <- WGCNA::moduleEigengenes(X[[i]], mergedColors)$eigengenes
       }else{
         #module detection one step - for high feature count omic layers
-        #X[[i]]<-X[[i]][,order(apply(X[[i]],2,mad),decreasing=T)[1:10000]]#could remove
         # Choose a set of soft-thresholding powers
         powers <- c(c(1:10), seq(from = 12, to = 20, by = 2))
         # Call the network topology analysis function
@@ -234,7 +249,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
                                          minModuleSize = 30,
                                          reassignThreshold = 0, mergeCutHeight = 0.25,
                                          numericLabels = TRUE, saveTOMs = FALSE,
-                                         saveTOMFileBase = paste0(i, "_TOM"),
+                                         #saveTOMFileBase = paste0(i, "_TOM"),
                                          verbose = 0)
 
         bwLabels <- bwnet$colors
@@ -286,9 +301,31 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
                             setStdMargins = FALSE,
                             cex.text = 0.5,
                             zlim = c(-1, 1),
-                            main = paste0(names(X)[MEs_combo[v, 1]], names(X)[MEs_combo[v, 2]], "Module-trait relationships"))
-      grDevices::dev.off() #need to have more metabolites or not cluster metabolites, and need to reduce number of rna features
-    }
+                            main = paste0("Module-module relationships\n"), names(X)[MEs_combo[v, 1]], names(X)[MEs_combo[v, 2]])
+      grDevices::dev.off()
+
+      #write correlation and pvalues of module to module relationsips
+      utils::write.table(moduleTraitCor, paste0(cdir, "/", "Module-Module_cor.csv"))
+      utils::write.table(moduleTraitPvalue, paste0(cdir, "/", "Module-Module_pval.csv"))
+
+      #test exract module membership
+      geneModuleMembership <- as.data.frame(WGCNA::cor(X[[MEs_combo[v, 1]]], WGCNA::orderMEs(all_MEs[[MEs_combo[v, 1]]]), method = "pearson"))
+      utils::write.table(moduleTraitPvalue, paste0(cdir, "/", "Module_membership_", names(X)[MEs_combo[v, 1]], ".csv"))
+      geneModuleMembership2 <- as.data.frame(WGCNA::cor(X[[MEs_combo[v, 2]]], WGCNA::orderMEs(all_MEs[[MEs_combo[v, 2]]]), method = "pearson"))
+      utils::write.table(moduleTraitPvalue, paste0(cdir, "/", "Module_membership_", names(X)[MEs_combo[v, 2]], ".csv"))
+      # testing module membership viz
+      grDevices::pdf(file = paste0(cdir, "/", paste(names(X)[MEs_combo[v, 1]], names(X)[MEs_combo[v, 2]], "module_membership_subset.pdf", sep = "_")))
+      graphics::par(cex.main = 1)
+      df <- unique(c(unlist(lapply(geneModuleMembership, function(x) tail(rownames(geneModuleMembership)[order(x, decreasing = TRUE)], n = 3))),
+                     unlist(lapply(geneModuleMembership, function(x) tail(rownames(geneModuleMembership)[order(x, decreasing = FALSE)], n = 3)))))
+      heatmap(as.matrix(geneModuleMembership[rownames(geneModuleMembership) %in% df, ]), main = paste("module membership of extreme", names(X)[MEs_combo[v, 1]]),
+              margins = c(8, 8))
+      df <- unique(c(unlist(lapply(geneModuleMembership2, function(x) tail(rownames(geneModuleMembership2)[order(x, decreasing = TRUE)], n = 3))),
+                     unlist(lapply(geneModuleMembership2, function(x) tail(rownames(geneModuleMembership2)[order(x, decreasing = FALSE)], n = 3)))))
+      heatmap(as.matrix(geneModuleMembership2[rownames(geneModuleMembership2) %in% df, ]), main = paste("module membership of extreme", names(X)[MEs_combo[v, 2]]),
+              margins = c(8, 8))
+      grDevices::dev.off()
+      }
   }
 
   #SNF https://github.com/cran/SNFtool
