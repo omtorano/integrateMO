@@ -1,6 +1,6 @@
 #' Multi-omics integration for toxicology data
 #'
-#' @param int_method sPLS-DA, MOFA2, WGCNA, or SNF
+#' @param int_method sPLS-DA, MOFA2, WGCNA, SNF, or iPCA
 #' @param RRBS_feature_map dataframe of RRBS features to genes, must match format of Unique_Features_to_Genes.csv from formatRRBS output
 #'
 #' @return output
@@ -163,7 +163,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
              main = paste("Mean connectivity"))
         graphics::text(sft$fitIndices[, 1], sft$fitIndices[, 5], labels = powers, cex = 0.9, col = color_forplot)
         grDevices::dev.off()
-        adjacency <- WGCNA::adjacency(X$metab_peaks, power = power_from_sft)
+        adjacency <- WGCNA::adjacency(X[[i]], power = power_from_sft)
         TOM <- WGCNA::TOMsimilarity(adjacency)
         dissTOM <- 1 - TOM
         # Call the hierarchical clustering function
@@ -230,7 +230,8 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
         grDevices::dev.off()
         #could do saveTOMd=FALSE
         bwnet <- WGCNA::blockwiseModules(X[[i]], maxBlockSize = 5000,
-                                         power = power_from_sft, TOMType = "unsigned", minModuleSize = 30,
+                                         power = power_from_sft, TOMType = "unsigned",
+                                         minModuleSize = 30,
                                          reassignThreshold = 0, mergeCutHeight = 0.25,
                                          numericLabels = TRUE, saveTOMs = FALSE,
                                          saveTOMFileBase = paste0(i, "_TOM"),
@@ -264,7 +265,8 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
     for (v in 1:nrow(MEs_combo)){
       nGenes <- ncol(X[[MEs_combo[v, 1]]])
       nSamples <- nrow(X[[MEs_combo[v, 1]]])
-      moduleTraitCor <- WGCNA::cor(WGCNA::orderMEs(all_MEs[[MEs_combo[v, 1]]]), WGCNA::orderMEs(all_MEs[[MEs_combo[v, 2]]]), use = "pearson")
+      moduleTraitCor <- WGCNA::cor(WGCNA::orderMEs(all_MEs[[MEs_combo[v, 1]]]),
+                                   WGCNA::orderMEs(all_MEs[[MEs_combo[v, 2]]]), method = "pearson")
       moduleTraitPvalue <- WGCNA::corPvalueStudent(moduleTraitCor, nSamples)
       textMatrix <- paste0(signif(moduleTraitCor, 2), "\n(",
                     signif(moduleTraitPvalue, 1), ")")
@@ -272,18 +274,19 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
       pdf_name <- paste(names(X)[MEs_combo[v, 1]], names(X)[MEs_combo[v, 2]], "module_relationship.pdf", sep = "_")
       grDevices::pdf(file = paste0(cdir, "/", pdf_name))
       # Display the correlation values within a heatmap plot
-      graphics::par(mar = c(4, 7, 2, 2))
+      graphics::par(mar = c(7, 7, 2, 2))
       WGCNA::labeledHeatmap(Matrix = moduleTraitCor,
                             xLabels = names(WGCNA::orderMEs(all_MEs[[MEs_combo[v, 2]]])),
                             yLabels = names(WGCNA::orderMEs(all_MEs[[MEs_combo[v, 1]]])),
+                            xSymbols = names(WGCNA::orderMEs(all_MEs[[MEs_combo[v, 2]]])),
                             ySymbols = names(WGCNA::orderMEs(all_MEs[[MEs_combo[v, 1]]])),
                             colorLabels = FALSE,
-                            colors = WGCNA::greenWhiteRed(50),
+                            colors = WGCNA::blueWhiteRed(50),
                             textMatrix = textMatrix,
                             setStdMargins = FALSE,
                             cex.text = 0.5,
                             zlim = c(-1, 1),
-                            main = paste0(names(X)[MEs_combo[v, 1]], names(X)[MEs_combo[v, 2]],"Module-trait relationships"))
+                            main = paste0(names(X)[MEs_combo[v, 1]], names(X)[MEs_combo[v, 2]], "Module-trait relationships"))
       grDevices::dev.off() #need to have more metabolites or not cluster metabolites, and need to reduce number of rna features
     }
   }
