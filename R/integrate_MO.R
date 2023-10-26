@@ -4,6 +4,7 @@
 #' @param RRBS_feature_map dataframe of RRBS features to genes, must match format of Unique_Features_to_Genes.csv from formatRRBS output
 #'
 #' @return output
+#' @importFrom WGCNA cor
 #' @export
 integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA"), RRBS_feature_map = NULL){
 
@@ -61,7 +62,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
                                                                   arr.ind = TRUE)[[2]]]
     grDevices::pdf(file = paste0(cdir, "/", "mixOmics_classification_error_rate.pdf"))
     plot(perf.diablo.mo)
-    graphics::mtext(paste0("comp =", ncomp, " dist =", dist_name), side = 3)
+    graphics::mtext(paste0("comp = ", ncomp, " dist = ", dist_name), side = 3)
     grDevices::dev.off()
     test.keepX <- list()
     for( i in names(X)){
@@ -83,7 +84,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
       for ( j in 1:length(X)){
         values<-rbind(values, as.data.frame(mixOmics::selectVar(diablo.mo, comp = i)[[j]][2]))
       }
-      utils::write.table(values, paste0(cdir, "/", "splsda_variables_comp", i, ".csv"))
+      utils::write.csv(values, paste0(cdir, "/", "splsda_variables_comp", i, ".csv"))
     }
     if(ncomp > 1){
       grDevices::pdf(file = paste0(cdir, "/", "mixOmics_plotVar1-2.pdf"))
@@ -219,6 +220,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
                                     addGuide = TRUE, guideHang = 0.05)
         grDevices::dev.off()
         lowcount_omics_MEs[[i]] <- WGCNA::moduleEigengenes(X[[i]], mergedColors)$eigengenes
+        utils::write.csv(lowcount_omics_MEs[[i]], paste0(cdir, "/", "Module_Eigengens_", i, ".csv"))
       }else{
         #module detection one step - for high feature count omic layers
         # Choose a set of soft-thresholding powers
@@ -249,7 +251,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
                                          minModuleSize = 30,
                                          reassignThreshold = 0, mergeCutHeight = 0.25,
                                          numericLabels = TRUE, saveTOMs = FALSE,
-                                         #saveTOMFileBase = paste0(i, "_TOM"),
+                                         saveTOMFileBase = paste0(i, "_TOM"),
                                          verbose = 0)
 
         bwLabels <- bwnet$colors
@@ -271,6 +273,8 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
         }
         grDevices::dev.off()
         block_MEs[[i]] <- WGCNA::moduleEigengenes(X[[i]], bwModuleColors)$eigengenes
+        utils::write.csv(block_MEs[[i]], paste0(cdir, "/", "Module_Eigengens_", i, ".csv"))
+
       }
     }
     #this all needs to be modified for having +2 omic layers
@@ -300,18 +304,18 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
                             setStdMargins = FALSE,
                             cex.text = 0.5,
                             zlim = c(-1, 1),
-                            main = paste0("Module-module relationships\n"), names(X)[MEs_combo[v, 1]], names(X)[MEs_combo[v, 2]])
+                            main = paste0("y =", names(X)[MEs_combo[v, 1]], "x =", names(X)[MEs_combo[v, 2]], "/nModule-module relationships"))
       grDevices::dev.off()
 
       #write correlation and pvalues of module to module relationsips
-      utils::write.table(moduleTraitCor, paste0(cdir, "/", "Module-Module_cor.csv"))
-      utils::write.table(moduleTraitPvalue, paste0(cdir, "/", "Module-Module_pval.csv"))
+      utils::write.csv(moduleTraitCor, paste0(cdir, "/", "Module-Module_cor.csv"))
+      utils::write.csv(moduleTraitPvalue, paste0(cdir, "/", "Module-Module_pval.csv"))
 
       #test exract module membership
       geneModuleMembership <- as.data.frame(WGCNA::cor(X[[MEs_combo[v, 1]]], WGCNA::orderMEs(all_MEs[[MEs_combo[v, 1]]]), method = "pearson"))
-      utils::write.table(moduleTraitPvalue, paste0(cdir, "/", "Module_membership_", names(X)[MEs_combo[v, 1]], ".csv"))
+      utils::write.csv(geneModuleMembership, paste0(cdir, "/", "Module_membership_", names(X)[MEs_combo[v, 1]], ".csv"))
       geneModuleMembership2 <- as.data.frame(WGCNA::cor(X[[MEs_combo[v, 2]]], WGCNA::orderMEs(all_MEs[[MEs_combo[v, 2]]]), method = "pearson"))
-      utils::write.table(moduleTraitPvalue, paste0(cdir, "/", "Module_membership_", names(X)[MEs_combo[v, 2]], ".csv"))
+      utils::write.csv(geneModuleMembership2, paste0(cdir, "/", "Module_membership_", names(X)[MEs_combo[v, 2]], ".csv"))
       # testing module membership viz
       grDevices::pdf(file = paste0(cdir, "/", paste(names(X)[MEs_combo[v, 1]], names(X)[MEs_combo[v, 2]], "module_membership_subset.pdf", sep = "_")))
       graphics::par(cex.main = 1)
