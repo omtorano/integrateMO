@@ -64,7 +64,7 @@ import_MO <- function(rnaseq_counts = NULL,
     #RNAseq
     if(!is.null(data_list$rnaseq_counts)) {
       print("normalizing RNAseq counts with edgeR TMM")
-      grDevices::pdf(file = paste0(cdir, "/", "rnaseq_norm_filter.pdf"))
+      svglite::svglite(file = paste0(cdir, "/", "rnaseq_norm_filter.svg"))
       graphics::par(mfrow = c(1, 2))
       # sub-setting %20 of rows for plots
       select_rows <- sample(nrow(data_list$rnaseq_counts), length(rownames(data_list$rnaseq_counts)) * .2)
@@ -89,7 +89,7 @@ import_MO <- function(rnaseq_counts = NULL,
       grDevices::dev.off()
       #Normalization independent visualizations
       #PCA
-      grDevices::pdf(file = paste0(cdir, "/", "rnaseq_norm_PCAs_scree.pdf"))
+      svglite::svglite(file = paste0(cdir, "/", "rnaseq_norm_PCAs_scree.svg"))
       TRTColor <- as.numeric(y$samples$group) + .01
       #TRT can only be 5 here
       color_options<-c("red3", "coral","green3", "purple", "black", "blue")
@@ -117,7 +117,7 @@ import_MO <- function(rnaseq_counts = NULL,
                                                             digits = 2), col = "white", cex = 0.5)
       grDevices::dev.off()
       #MDS
-      grDevices::pdf(file = paste0(cdir, "/", "rnaseq_norm_PCoA_MDS.pdf"))
+      svglite::svglite(file = paste0(cdir, "/", "rnaseq_norm_PCoA_MDS.svg"))
       par(mar = c(5.1, 4.1, 4.1, 8.1), xpd = TRUE)
       limma::plotMDS(y, col = TRTColor, pch = 16, gene.selection = "pairwise", top = 500, cex = 1.5)
       legend("topright", inset = c(-0.25, 0), legend = unique(y$samples$group), fill = unique(TRTColor),
@@ -129,7 +129,7 @@ import_MO <- function(rnaseq_counts = NULL,
     if(!is.null(data_list$metab_peaks)) {
       print("normalizing metabolite sum peak area with mean centering and pareto scaling")
       data_list$metab_peaks <- data_list$metab_peaks[rowSums(data_list$metab_peaks) > 0, ]
-      grDevices::pdf(file = paste0(cdir, "/" , "metab_impute_norm_filter.pdf"))
+      svglite::svglite(file = paste0(cdir, "/" , "metab_impute_norm_filter.svg"))
       graphics::par(mfrow = c(1, 2))
       graphics::boxplot(data_list$metab_peaks, main = "Raw values", las = 2)
       #add zero impute step
@@ -152,7 +152,7 @@ import_MO <- function(rnaseq_counts = NULL,
 
       }
       print("RRBS viz")
-      grDevices::pdf(file = paste0(cdir, "/", "rrbs_boxplot.pdf"))
+      svglite::svglite(file = paste0(cdir, "/", "rrbs_boxplot.svg"))
       #sub-setting %20 of rows for plots
       select_rows <- sample(nrow(data_list$rrbs_mvals), length(rownames(data_list$rrbs_mvals)) * .2)
       suppressWarnings(graphics::boxplot(data_list$rrbs_mvals[select_rows, ],
@@ -160,7 +160,7 @@ import_MO <- function(rnaseq_counts = NULL,
                                length(data_list$rrbs_mvals[, 1])), las = 2))
       grDevices::dev.off()
       #MDS
-      grDevices::pdf(file = paste0(cdir, "/", "rrbs_PCoA_MDS.pdf"))
+      svglite::svglite(file = paste0(cdir, "/", "rrbs_PCoA_MDS.svg"))
       par(mar = c(5.1, 4.1, 4.1, 8.1), xpd = TRUE)
       limma::plotMDS(data_list$rrbs_mvals, col = TRTColor, pch = 16, gene.selection = "pairwise", top = 500, cex = 1.5)
       legend('topright', inset = c(-0.25, 0), legend = unique(y$samples$group), fill = unique(TRTColor),

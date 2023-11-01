@@ -24,4 +24,5 @@ Imports:
 	fastcluster,
 	WGCNA,
 	sva,
-	BiocParallel
+	BiocParallel,
+	svglite
