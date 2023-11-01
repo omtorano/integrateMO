@@ -329,6 +329,11 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
       }
       utils::write.csv(geneModuleMembership, paste0(cdir, "/", "Module_membership_", names(X)[MEs_combo[v, 1]], ".csv"))
       geneModuleMembership2 <- as.data.frame(WGCNA::cor(X[[MEs_combo[v, 2]]], WGCNA::orderMEs(all_MEs[[MEs_combo[v, 2]]]), method = "pearson"))
+      if (names(X)[MEs_combo[v, 2]]=="rrbs_mvals"){
+        if (exists("UF2G")){
+          rownames(geneModuleMembership2) <- paste(rownames(geneModuleMembership2), UF2G[match(rownames(geneModuleMembership2), UF2Gg$id), 4])
+        }
+      }
       utils::write.csv(geneModuleMembership2, paste0(cdir, "/", "Module_membership_", names(X)[MEs_combo[v, 2]], ".csv"))
       # Testing module membership viz
       svglite::svglite(file = paste0(cdir, "/", paste(names(X)[MEs_combo[v, 1]], names(X)[MEs_combo[v, 2]], "module_membership_subset.svg", sep = "_")))
