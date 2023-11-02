@@ -30,8 +30,8 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
   ## Prepare Unique_Features_to_Genes for RRBS
 
   if (!is.null(RRBS_feature_map)){
-  UF2G <- utils::read.csv(RRBS_feature_map)
-  UF2G$id <- paste(UF2G$chrom, UF2G$loc, sep = "-")
+    UF2G <- utils::read.csv(RRBS_feature_map)
+    UF2G$id <- paste(UF2G$chrom, UF2G$loc, sep = "-")
   }
 
   ## mixOmics
@@ -90,9 +90,9 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
       values<-vector()
       for (j in 1:length(X)){
         values<-rbind(values, as.data.frame(mixOmics::selectVar(diablo.mo, comp = i)[[j]][2]))
-      }
-      if (exists("UF2G")){
-        values[, 3] <- UF2G[match(values[, 1], UF2Gg$id), 4]
+        if (exists("UF2G")){
+          values[, 2] <- UF2G[match(rownames(values), UF2G$id), 4]
+        }
       }
       utils::write.csv(values, paste0(cdir, "/", "splsda_variables_comp", i, ".csv"))
     }
@@ -324,14 +324,14 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
       geneModuleMembership <- as.data.frame(WGCNA::cor(X[[MEs_combo[v, 1]]], WGCNA::orderMEs(all_MEs[[MEs_combo[v, 1]]]), method = "pearson"))
       if (names(X)[MEs_combo[v, 1]]=="rrbs_mvals"){
         if (exists("UF2G")){
-          rownames(geneModuleMembership) <- paste(rownames(geneModuleMembership), UF2G[match(rownames(geneModuleMembership), UF2Gg$id), 4])
+          rownames(geneModuleMembership) <- paste(rownames(geneModuleMembership), UF2G[match(rownames(geneModuleMembership), UF2G$id), 4])
         }
       }
       utils::write.csv(geneModuleMembership, paste0(cdir, "/", "Module_membership_", names(X)[MEs_combo[v, 1]], ".csv"))
       geneModuleMembership2 <- as.data.frame(WGCNA::cor(X[[MEs_combo[v, 2]]], WGCNA::orderMEs(all_MEs[[MEs_combo[v, 2]]]), method = "pearson"))
       if (names(X)[MEs_combo[v, 2]]=="rrbs_mvals"){
         if (exists("UF2G")){
-          rownames(geneModuleMembership2) <- paste(rownames(geneModuleMembership2), UF2G[match(rownames(geneModuleMembership2), UF2Gg$id), 4])
+          geneModuleMembership2$MethylationLoci_gene_map <- paste(rownames(geneModuleMembership2), UF2G[match(rownames(geneModuleMembership2), UF2G$id), 4])
         }
       }
       utils::write.csv(geneModuleMembership2, paste0(cdir, "/", "Module_membership_", names(X)[MEs_combo[v, 2]], ".csv"))
