@@ -42,7 +42,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
       if (!is.null(X[[i]])){
         if (ncol(X[[i]]) > 10000){
           X[[i]] <- X[[i]][, order(apply(X[[i]], 2, mad), decreasing = TRUE)[1:10000]]
-          cat("Limiting ", i,"to top 10,000 most variable features using median absolute deviation\n")
+          cat("Limiting", i,"to top 10,000 most variable features using median absolute deviation\n")
         }else{
           cat("Using all", ncol(X[[i]]), "rnaseq_counts features\n")
         }
@@ -90,12 +90,14 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
       values<-vector()
       for (j in 1:length(X)){
         values<-rbind(values, as.data.frame(mixOmics::selectVar(diablo.mo, comp = i)[[j]][2]))
+      }
         if (exists("UF2G")){
           values[, 2] <- UF2G[match(rownames(values), UF2G$id), 4]
         }
-      }
+
       utils::write.csv(values, paste0(cdir, "/", "splsda_variables_comp", i, ".csv"))
     }
+
     if (ncomp > 1){
       svglite::svglite(file = paste0(cdir, "/", "mixOmics_plotVar1-2.svg"))
       mixOmics::plotVar(diablo.mo, var.names = c(TRUE), style = "graphics", legend = TRUE,

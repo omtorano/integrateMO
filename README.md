@@ -51,41 +51,61 @@ integrate_MO(int_method = "sPLS-DA", RRBS_feature_map = ML-0_1000-1000_0.8_Uniqu
 ```
 
 ## Function output
-Running integrate_MO() will generate a folder in the current working directory with the following naming convention "integrateMO_*integration method*_*year-month-day time*
+Running integrate_MO() will generate a folder in the current working directory with the following naming convention "integrateMO_*integration method*_*year-month-day time*". The contents of the folder depend on the integration method chosen, details below.
 
-#below is working
+## integration method
+Integration method specifies which package/method will be employed to integrate data. Note that integrate_MO() is a wrapper for the below packages and appropriate citations to the original packages should be used.
+### sPLS-DA 139.04 6.67 1643.64 
+multiblock sparse partial least squares discriminant anslysis from the mixOmics package
+mixOmics multiblock sPLS-DA (DIABLO N-integration)  
+- https://mixomicsteam.github.io/mixOmics-Vignette/id_06.html#id_06:diablo  
+- Rohart, F., Gautier, B., Singh, A., & Lê Cao, K. A. (2017). mixOmics: An R package for ‘omics feature selection and multiple data integration. PLoS computational biology, 13(11), e1005752.  
+- Singh, A., Shannon, C. P., Gautier, B., Rohart, F., Vacher, M., Tebbutt, S. J., & Lê Cao, K. A. (2019). DIABLO: an integrative approach for identifying key molecular drivers from multi-omics assays. Bioinformatics, 35(17), 3055-3062.  
 
-Integration method specifies which package/method will be employed to integrate data. sPLS-DA is multiblock sparse partial least squares discriminant anslysis from the mixOmics package, multi-omic factor analysis from MOFA2, weighted gene correlation network analysis from WGCNA, similarity fusion network from SNF, or integrated principal components analysis from iPCA.
-
-
-## References & links for information on integration methods
-Note that integrate_MO() is a wrapper for the below packages and appropriate citations to the original packages should be used.
-
-mixOmics multiblock sPLS-DA (DIABLO N-integration)
-https://mixomicsteam.github.io/mixOmics-Vignette/id_06.html#id_06:diablo  
-Rohart, F., Gautier, B., Singh, A., & Lê Cao, K. A. (2017). mixOmics: An R package for ‘omics feature selection and multiple data integration. PLoS computational biology, 13(11), e1005752.  
-Singh, A., Shannon, C. P., Gautier, B., Rohart, F., Vacher, M., Tebbutt, S. J., & Lê Cao, K. A. (2019). DIABLO: an integrative approach for identifying key molecular drivers from multi-omics assays. Bioinformatics, 35(17), 3055-3062.  
-
-WGCNA  
-https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/index.html  
-Zhang B and Horvath S (2005) A General Framework for Weighted Gene Co-Expression Network Analysis, Statistical Applications in Genetics and Molecular Biology: Vol. 4: No. 1, Article 17 PMID: 16646834  
-Langfelder P, Horvath S (2008) WGCNA: an R package for weighted correlation network analysis. BMC Bioinformatics 2008, 9:559 (https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-559)
-
+### MOFA2
+multi-omic factor analysis from MOFA2
 MOFA  
-https://biofam.github.io/MOFA2/index.html
-https://raw.githack.com/bioFAM/MOFA2_tutorials/master/R_tutorials/getting_started_R.html  
-https://raw.githack.com/bioFAM/MOFA2_tutorials/master/R_tutorials/downstream_analysis.html  
-Argelaguet, R., Velten, B., Arnol, D., Dietrich, S., Zenz, T., Marioni, J. C., ... & Stegle, O. (2018). Multi‐Omics Factor Analysis—a framework for unsupervised integration of multi‐omics data sets. Molecular systems biology, 14(6), e8124.  
-Argelaguet, R., Arnol, D., Bredikhin, D., Deloro, Y., Velten, B., Marioni, J. C., & Stegle, O. (2020). MOFA+: a statistical framework for comprehensive integration of multi-modal single-cell data. Genome biology, 21(1), 1-17.  
+- https://biofam.github.io/MOFA2/index.html
+- https://raw.githack.com/bioFAM/MOFA2_tutorials/master/R_tutorials/getting_started_R.html  
+- https://raw.githack.com/bioFAM/MOFA2_tutorials/master/R_tutorials/downstream_analysis.html  
+- Argelaguet, R., Velten, B., Arnol, D., Dietrich, S., Zenz, T., Marioni, J. C., ... & Stegle, O. (2018). Multi‐Omics Factor Analysis—a framework for unsupervised integration of multi‐omics data sets. Molecular systems biology, 14(6), e8124.  
+- Argelaguet, R., Arnol, D., Bredikhin, D., Deloro, Y., Velten, B., Marioni, J. C., & Stegle, O. (2020). MOFA+: a statistical framework for comprehensive integration of multi-modal single-cell data. Genome biology, 21(1), 1-17.  
 
 
-SNF  
-https://www.rdocumentation.org/packages/SNFtool/versions/2.3.1/topics/SNF  
-https://github.com/cran/SNFtool  
-Wang, B., Mezlini, A. M., Demir, F., Fiume, M., Tu, Z., Brudno, M., ... & Goldenberg, A. (2014). Similarity network fusion for aggregating data types on a genomic scale. Nature methods, 11(3), 333-337.
+### WGCNA 
+weighted gene correlation network analysis from WGCNA
+WGCNA  
+- https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/index.html  
+- Zhang B and Horvath S (2005) A General Framework for Weighted Gene Co-Expression Network Analysis, Statistical Applications in Genetics and Molecular Biology: Vol. 4: No. 1, Article 17 PMID: 16646834  
+- Langfelder P, Horvath S (2008) WGCNA: an R package for weighted correlation network analysis. BMC Bioinformatics 2008, 9:559 (https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-559)
+### SNF
+similarity fusion network from SNF
+
+- https://www.rdocumentation.org/packages/SNFtool/versions/2.3.1/topics/SNF  
+- https://github.com/cran/SNFtool  
+- Wang, B., Mezlini, A. M., Demir, F., Fiume, M., Tu, Z., Brudno, M., ... & Goldenberg, A. (2014). Similarity network fusion for aggregating data types on a genomic scale. Nature methods, 11(3), 333-337.
+
+### iPCA
+or integrated principal components analysis from iPCA.
 
 iPCA  
-https://github.com/DataSlingers/iPCA  
-Tang, T. M., & Allen, G. I. (2021). Integrated principal components analysis. The Journal of Machine Learning Research, 22(1), 8953-9023.
+- https://github.com/DataSlingers/iPCA  
+- Tang, T. M., & Allen, G. I. (2021). Integrated principal components analysis. The Journal of Machine Learning Research, 22(1), 8953-9023.
 
-#
+
+## RRBS_feature_map
+If RRBS methylation loci features are being input, the resulting output will have the "chromosome-location" format for any output with feature names. 
+Including the RRBS_feature_map option will include associated genes in .csv output with feature names. If RRBS M-values were formatted with the formatRRBS 
+package, the path to the Unique_Features_to_Genes.csv file should be the input for this parameter. If RRBS M-values were not formatted with the formatRRBS
+package, the input for this parameter must be a .csv of methylation feature loci and associated genes. The format of this spreadsheet must have chromosome locations
+in a column labeled "chrom", location along the chromosome in a column labeled "loc", and a column of associated genes as the fourth column of the spreadsheet. **this can be improved in v2**
+If formatRRBS was used, "association" of methylation loci and genes is defined as a methylation location falling within the defined base pair window of a given gene. Default parameters for formatRRBS
+define this window as 1000bp, so a methylation location is associted with a gene if its location falls within 1000bp upstream, within the gene body, or within 1000bp downstream of the gene. 
+
+
+
+
+
+
+
+
