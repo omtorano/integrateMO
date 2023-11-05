@@ -67,9 +67,9 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
     # dist_name <- colnames(perf.diablo.mo$choice.ncomp$WeightedVote[,perf.diablo.mo$choice.ncomp$WeightedVote[2,]==ncomp])[1]
     dist_name <- colnames(perf.diablo.mo$error.rate[[1]])[which(perf.diablo.mo$error.rate[[1]] == min(perf.diablo.mo$error.rate[[1]]),
                                                                   arr.ind = TRUE)[[2]]]
-    svglite::svglite(file = paste0(cdir, "/", "mixOmics_classification_error_rate.svg"))
+    svglite::svglite(file = paste0(cdir, "/", "classification_error_rate.svg"))
     plot(perf.diablo.mo)
-    graphics::mtext(paste0("comp = ", ncomp, " dist = ", dist_name), side = 3)
+    graphics::mtext(paste0("components=", ncomp, " distance=", dist_name), side = 3)
     grDevices::dev.off()
     test.keepX <- list()
     for (i in names(X)){
@@ -99,34 +99,34 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
     }
 
     if (ncomp > 1){
-      svglite::svglite(file = paste0(cdir, "/", "mixOmics_plotVar1-2.svg"))
+      svglite::svglite(file = paste0(cdir, "/", "plotVar1-2.svg"))
       mixOmics::plotVar(diablo.mo, var.names = c(TRUE), style = "graphics", legend = TRUE,
                         title = "DIABLO components 1 - 2")
       grDevices::dev.off()
       if (ncomp == 4){
-        svglite::svglite(file = paste0(cdir, "/", "mixOmics_plotVar3-4.svg"))
+        svglite::svglite(file = paste0(cdir, "/", "plotVar3-4.svg"))
         mixOmics::plotVar(diablo.mo, var.names = c(TRUE), style = "graphics", legend = TRUE,
                           comp = c(3, 4), title = "DIABLO components 3 - 4")
         grDevices::dev.off()
       }
-      svglite::svglite(file = paste0(cdir, "/", "mixOmics_plotIndiv1-2.svg"))
+      svglite::svglite(file = paste0(cdir, "/", "plotIndiv1-2.svg"))
       mixOmics::plotIndiv(diablo.mo, ind.names = FALSE, legend = TRUE, comp = c(1, 2),
                           title = "DIABLO components 1 - 2", block = "weighted.average")
       grDevices::dev.off()
       if (ncomp == 4){
-        svglite::svglite(file = paste0(cdir, "/", "mixOmics_plotIndiv3-4.svg"))
+        svglite::svglite(file = paste0(cdir, "/", "plotIndiv3-4.svg"))
         mixOmics::plotIndiv(diablo.mo, ind.names = FALSE, legend = TRUE, comp = c(3, 4),
                             title = "DIABLO components 3 - 4", block = "weighted.average")
         grDevices::dev.off()
       }
       for (i in 1:ncomp){
-        svglite::svglite(file = paste0(cdir, "/", "mixOmics_cim", i, ".svg"))
-        mixOmics::cimDiablo(diablo.mo, comp = i, margin=c(11, 15), legend.position = "topright",
+        svglite::svglite(file = paste0(cdir, "/", "clustered_image_map", i, ".svg"))
+        mixOmics::cimDiablo(diablo.mo, comp = i, margin = c(11, 15), legend.position = "topright",
                             trim = FALSE, size.legend = 0.7)
         grDevices::dev.off()
       }
       for (i in names(X)){
-        svglite::svglite(file = paste0(cdir, "/", "mixOmics_auroc_", i, ".svg"))
+        svglite::svglite(file = paste0(cdir, "/", "auroc_", i, ".svg"))
         auc.diablo.mo <- mixOmics::auroc(diablo.mo, roc.block = i, roc.comp = ncomp,
                                          print = FALSE)
         grDevices::dev.off()
@@ -232,7 +232,11 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
                                     addGuide = TRUE, guideHang = 0.05)
         grDevices::dev.off()
         lowcount_omics_MEs[[i]] <- WGCNA::moduleEigengenes(X[[i]], mergedColors)$eigengenes
-        utils::write.csv(lowcount_omics_MEs[[i]], paste0(cdir, "/", "Module_Eigengens_", i, ".csv"))
+        utils::write.csv(lowcount_omics_MEs[[i]], paste0(cdir, "/", "Module_Eigengenes_", i, ".csv"))
+        svglite::svglite(file = paste0(cdir, "/", paste0("Module_Eigengenes_heatplot_", i, ".svg")))
+        stats::heatmap(as.matrix(lowcount_omics_MEs[[i]]), main = paste0("Module Eigengenes", i),
+                       margins = c(8, 8))
+        grDevices::dev.off()
       }else{
         # Module detection one step - for high feature count omic layers
         # Choose a set of soft-thresholding powers
@@ -284,7 +288,13 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
         }
         grDevices::dev.off()
         block_MEs[[i]] <- WGCNA::moduleEigengenes(X[[i]], bwModuleColors)$eigengenes
-        utils::write.csv(block_MEs[[i]], paste0(cdir, "/", "Module_Eigengens_", i, ".csv"))
+        utils::write.csv(block_MEs[[i]], paste0(cdir, "/", "Module_Eigengenes_", i, ".csv"))
+
+        svglite::svglite(file = paste0(cdir, "/", paste0("Module_Eigengenes_heatplot_", i, ".svg")))
+        graphics::par(cex.main = 1)
+        stats::heatmap(as.matrix(block_MEs[[i]]), main = paste("Module Eigengenes", i),
+                margins = c(8, 8))
+        grDevices::dev.off()
 
       }
     }
@@ -337,18 +347,19 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
         }
       }
       utils::write.csv(geneModuleMembership2, paste0(cdir, "/", "Module_membership_", names(X)[MEs_combo[v, 2]], ".csv"))
-      # Testing module membership viz
-      svglite::svglite(file = paste0(cdir, "/", paste(names(X)[MEs_combo[v, 1]], names(X)[MEs_combo[v, 2]], "module_membership_subset.svg", sep = "_")))
-      graphics::par(cex.main = 1)
-      df <- unique(c(unlist(lapply(geneModuleMembership, function(x) utils::tail(rownames(geneModuleMembership)[order(x, decreasing = TRUE)], n = 3))),
-                     unlist(lapply(geneModuleMembership, function(x) utils::tail(rownames(geneModuleMembership)[order(x, decreasing = FALSE)], n = 3)))))
-      stats::heatmap(as.matrix(geneModuleMembership[rownames(geneModuleMembership) %in% df, ]), main = paste("module membership of extreme", names(X)[MEs_combo[v, 1]]),
-              margins = c(8, 8))
-      df <- unique(c(unlist(lapply(geneModuleMembership2, function(x) utils::tail(rownames(geneModuleMembership2)[order(x, decreasing = TRUE)], n = 3))),
-                     unlist(lapply(geneModuleMembership2, function(x) utils::tail(rownames(geneModuleMembership2)[order(x, decreasing = FALSE)], n = 3)))))
-      stats::heatmap(as.matrix(geneModuleMembership2[rownames(geneModuleMembership2) %in% df, ]), main = paste("module membership of extreme", names(X)[MEs_combo[v, 2]]),
-              margins = c(8, 8))
-      grDevices::dev.off()
+
+      # # Testing module membership viz
+      # svglite::svglite(file = paste0(cdir, "/", paste(names(X)[MEs_combo[v, 1]], names(X)[MEs_combo[v, 2]], "module_membership_subset.svg", sep = "_")))
+      # graphics::par(cex.main = 1)
+      # df <- unique(c(unlist(lapply(geneModuleMembership, function(x) utils::tail(rownames(geneModuleMembership)[order(x, decreasing = TRUE)], n = 3))),
+      #                unlist(lapply(geneModuleMembership, function(x) utils::tail(rownames(geneModuleMembership)[order(x, decreasing = FALSE)], n = 3)))))
+      # stats::heatmap(as.matrix(geneModuleMembership[rownames(geneModuleMembership) %in% df, ]), main = paste("module membership of extreme", names(X)[MEs_combo[v, 1]]),
+      #         margins = c(8, 8))
+      # df <- unique(c(unlist(lapply(geneModuleMembership2, function(x) utils::tail(rownames(geneModuleMembership2)[order(x, decreasing = TRUE)], n = 3))),
+      #                unlist(lapply(geneModuleMembership2, function(x) utils::tail(rownames(geneModuleMembership2)[order(x, decreasing = FALSE)], n = 3)))))
+      # stats::heatmap(as.matrix(geneModuleMembership2[rownames(geneModuleMembership2) %in% df, ]), main = paste("module membership of extreme", names(X)[MEs_combo[v, 2]]),
+      #         margins = c(8, 8))
+      # grDevices::dev.off()
       }
   }
 

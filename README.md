@@ -54,9 +54,93 @@ integrate_MO(int_method = "sPLS-DA", RRBS_feature_map = ML-0_1000-1000_0.8_Uniqu
 Running integrate_MO() will generate a folder in the current working directory with the following naming convention "integrateMO_*integration method*_*year-month-day time*". The contents of the folder depend on the integration method chosen, details below.
 
 ## integration method
-Integration method specifies which package/method will be employed to integrate data. Note that integrate_MO() is a wrapper for the below packages and appropriate citations to the original packages should be used.
+Integration method specifies which package & method will be employed to integrate data. Note that integrate_MO() is a wrapper for the below packages and appropriate citations to the original packages should be used.
 ### sPLS-DA 139.04 6.67 1643.64 
-multiblock sparse partial least squares discriminant anslysis from the mixOmics package
+multiblock sparse partial least squares discriminant anslysis from the mixOmics package. The steps performed with this method closely follow the steps described in the mixOmics vignette linked below.
+Important decision points and outputs:
+- Features from each omic layer are limited to top 10,000 features by median absolute deviation 
+- The design matrix is determined using mixOmics' "data driven" approach. For each omics group cross comparison, PLS with one component is calculated, the
+cross-correlations between components are averaged and used as the off diagonal values of the design matrix.  
+- The number of components is first set to # of treatments + 1, performance evaluation is done with perf(), folds = number of samples in treatment level
+with minimum replicates, nrepeat = 10, final number of components and distance metric selected will be saved in the classification_error_rate plot.
+
+
+
+    diablo.mo <- mixOmics::block.plsda(X, Y, ncomp = length(unique(meta$TRT)) + 1, design = design)
+    perf.diablo.mo <- mixOmics::perf(diablo.mo, validation = "Mfold", folds = min(table(meta$TRT)), nrepeat = 10)
+    ncomp <- min(perf.diablo.mo$choice.ncomp$WeightedVote[2,])
+    # dist_name <- colnames(perf.diablo.mo$choice.ncomp$WeightedVote[,perf.diablo.mo$choice.ncomp$WeightedVote[2,]==ncomp])[1]
+    dist_name <- colnames(perf.diablo.mo$error.rate[[1]])[which(perf.diablo.mo$error.rate[[1]] == min(perf.diablo.mo$error.rate[[1]]),
+                                                                  arr.ind = TRUE)[[2]]]
+    svglite::svglite(file = paste0(cdir, "/", "mixOmics_classification_error_rate.svg"))
+    plot(perf.diablo.mo)
+    graphics::mtext(paste0("comp = ", ncomp, " dist = ", dist_name), side = 3)
+    grDevices::dev.off()
+    test.keepX <- list()
+    for (i in names(X)){
+      test.keepX[[i]] <- c(5:9, seq(10, 25, 5))
+    }
+    for (i in dist_name){
+      tune.diablo.mo <- mixOmics::tune.block.splsda(X, Y, ncomp = ncomp,
+                                            test.keepX = test.keepX, design = design,
+                                            validation = "Mfold", folds = 5, nrepeat = 10,
+                                            # use two CPUs for faster computation
+                                            BPPARAM = BiocParallel::SnowParam(workers = parallel::detectCores()),
+                                            dist = i) # should this error rate match multiomics_pdf?
+    }
+    list.keepX <- tune.diablo.mo$choice.keepX
+    diablo.mo <- mixOmics::block.splsda(X, Y, ncomp = ncomp,
+                                          keepX = list.keepX)
+    for (i in 1:ncomp){
+      values<-vector()
+      for (j in 1:length(X)){
+        values<-rbind(values, as.data.frame(mixOmics::selectVar(diablo.mo, comp = i)[[j]][2]))
+      }
+        if (exists("UF2G")){
+          values[, 2] <- UF2G[match(rownames(values), UF2G$id), 4]
+        }
+
+      utils::write.csv(values, paste0(cdir, "/", "splsda_variables_comp", i, ".csv"))
+    }
+
+    if (ncomp > 1){
+      svglite::svglite(file = paste0(cdir, "/", "mixOmics_plotVar1-2.svg"))
+      mixOmics::plotVar(diablo.mo, var.names = c(TRUE), style = "graphics", legend = TRUE,
+                        title = "DIABLO components 1 - 2")
+      grDevices::dev.off()
+      if (ncomp == 4){
+        svglite::svglite(file = paste0(cdir, "/", "mixOmics_plotVar3-4.svg"))
+        mixOmics::plotVar(diablo.mo, var.names = c(TRUE), style = "graphics", legend = TRUE,
+                          comp = c(3, 4), title = "DIABLO components 3 - 4")
+        grDevices::dev.off()
+      }
+      svglite::svglite(file = paste0(cdir, "/", "mixOmics_plotIndiv1-2.svg"))
+      mixOmics::plotIndiv(diablo.mo, ind.names = FALSE, legend = TRUE, comp = c(1, 2),
+                          title = "DIABLO components 1 - 2", block = "weighted.average")
+      grDevices::dev.off()
+      if (ncomp == 4){
+        svglite::svglite(file = paste0(cdir, "/", "mixOmics_plotIndiv3-4.svg"))
+        mixOmics::plotIndiv(diablo.mo, ind.names = FALSE, legend = TRUE, comp = c(3, 4),
+                            title = "DIABLO components 3 - 4", block = "weighted.average")
+        grDevices::dev.off()
+      }
+      for (i in 1:ncomp){
+        svglite::svglite(file = paste0(cdir, "/", "mixOmics_cim", i, ".svg"))
+        mixOmics::cimDiablo(diablo.mo, comp = i, margin=c(11, 15), legend.position = "topright",
+                            trim = FALSE, size.legend = 0.7)
+        grDevices::dev.off()
+      }
+      for (i in names(X)){
+        svglite::svglite(file = paste0(cdir, "/", "mixOmics_auroc_", i, ".svg"))
+        auc.diablo.mo <- mixOmics::auroc(diablo.mo, roc.block = i, roc.comp = ncomp,
+                                         print = FALSE)
+        grDevices::dev.off()
+      }
+    }
+  }
+
+
+
 mixOmics multiblock sPLS-DA (DIABLO N-integration)  
 - https://mixomicsteam.github.io/mixOmics-Vignette/id_06.html#id_06:diablo  
 - Rohart, F., Gautier, B., Singh, A., & Lê Cao, K. A. (2017). mixOmics: An R package for ‘omics feature selection and multiple data integration. PLoS computational biology, 13(11), e1005752.  
@@ -72,7 +156,7 @@ MOFA
 - Argelaguet, R., Arnol, D., Bredikhin, D., Deloro, Y., Velten, B., Marioni, J. C., & Stegle, O. (2020). MOFA+: a statistical framework for comprehensive integration of multi-modal single-cell data. Genome biology, 21(1), 1-17.  
 
 
-### WGCNA 
+### WGCNA 1535.94   66.34 1624.73 
 weighted gene correlation network analysis from WGCNA
 WGCNA  
 - https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/index.html  
