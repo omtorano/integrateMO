@@ -73,7 +73,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
     grDevices::dev.off()
     test.keepX <- list()
     for (i in names(X)){
-      test.keepX[[i]] <- c(5:9, seq(10, 25, 5))
+      test.keepX[[i]] <- c(5:9, seq(10, 50, 5))
     }
     for (i in dist_name){
       tune.diablo.mo <- mixOmics::tune.block.splsda(X, Y, ncomp = ncomp,
@@ -94,7 +94,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
         if (exists("UF2G")){
           values[, 2] <- UF2G[match(rownames(values), UF2G$id), 4]
         }
-
+      colnames(values) <- c("value", "associated_gene")
       utils::write.csv(values, paste0(cdir, "/", "splsda_variables_comp", i, ".csv"))
     }
 
@@ -137,7 +137,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
   # WGCNA - counts need to be vst or log2
   if (int_method == "WGCNA"){
     if (!is.null(X$rrbs_mvals)){
-      X$rrbs_mvals <- X$rrbs_mvals[, order(apply(X$rrbs_mvals, 2, mad), decreasing = TRUE)[1:(.25 * ncol(X$rrbs_mvals))]]
+      X$rrbs_mvals <- X$rrbs_mvals[, order(apply(X$rrbs_mvals, 2, mad), decreasing = TRUE)[1:(0.25 * ncol(X$rrbs_mvals))]]
       cat("Limiting rrbs_mvals to top", ncol(X$rrbs_mvals), "most variable using median absolute deviation\n")
       }
     lowcount_omics_MEs <- list()
@@ -150,7 +150,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
     traitColors <- WGCNA::numbers2colors(TRT_number, signed = FALSE)
     # rnaseq counts are already logged
     for (i in names(X)){
-      svglite::svglite(file = paste0(cdir, "/", "hclust_", i, "_sampleTree.svg"))
+      sgrDevices::pdf(file = paste0(cdir, "/", "hclust_", i, "_sampleTree.pdf"))
       sampleTree <- fastcluster::hclust(stats::dist(X[[i]]), method = "average")
       #cluster with metadata
       WGCNA::plotDendroAndColors(fastcluster::hclust(stats::dist(X[[i]]), method = "single"), traitColors,
@@ -174,13 +174,13 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
       grDevices::dev.off()
       # Module detection one step - for low feature count omic layers but if very low dont need to cluster
       if (length(X[[i]]) > 100 && length(X[[i]]) < 5000){
-        powers = c(c(1:10), seq(from = 12, to = 40, by = 2))
+        powers = c(1:10, seq(from = 12, to = 40, by = 2))
         #allowWGCNAThreads()
         sft <- WGCNA::pickSoftThreshold(X[[i]], powerVector = powers, verbose = 0)
         power_from_sft <- sft$fitIndices[sft$fitIndices$SFT.R.sq == max(sft$fitIndices$SFT.R.sq[1:10]), 1]
         color_forplot <- rep("black", length(sft$fitIndices$Power))
         color_forplot[power_from_sft] <- "red"
-        svglite::svglite(file = paste(cdir, "/", "soft threasholding", i))
+        svglite::svglite(file = paste0(cdir, "/", "soft_threasholding_", i, ".svg"))
         graphics::par(mfrow = c(1, 2))
         plot(sft$fitIndices[, 1], -sign(sft$fitIndices[, 3]) * sft$fitIndices[, 2],
              xlab = "Soft Threshold (power)", ylab = "Scale Free Topology Model Fit,signed R^2", type = "n",
@@ -240,7 +240,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
       }else{
         # Module detection one step - for high feature count omic layers
         # Choose a set of soft-thresholding powers
-        powers <- c(c(1:10), seq(from = 12, to = 20, by = 2))
+        powers <- c(1:10, seq(from = 12, to = 20, by = 2))
         # Call the network topology analysis function
         sft <- WGCNA::pickSoftThreshold(X[[i]], powerVector = powers, verbose = 0)
         power_from_sft <- sft$fitIndices[sft$fitIndices$SFT.R.sq == max(sft$fitIndices$SFT.R.sq[1:10]), 1]
@@ -261,9 +261,10 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
              main = paste("Mean connectivity"))
         graphics::text(sft$fitIndices[, 1], sft$fitIndices[, 5], labels = powers, cex = 0.9, col = color_forplot)
         grDevices::dev.off()
+        minModuleSize <- floor(length(X[[i]]) / 20)
         bwnet <- WGCNA::blockwiseModules(X[[i]], maxBlockSize = 5000,
                                          power = power_from_sft, TOMType = "unsigned",
-                                         minModuleSize = 30,
+                                         minModuleSize = minModuleSize,
                                          reassignThreshold = 0, mergeCutHeight = 0.25,
                                          numericLabels = TRUE, saveTOMs = FALSE,
                                          saveTOMFileBase = paste0(i, "_TOM"),
@@ -271,7 +272,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
 
         bwLabels <- bwnet$colors
         bwModuleColors <- WGCNA::labels2colors(bwLabels)
-        svglite::svglite(file = paste0(cdir, "/", i, "_dendro.svg"))
+        grDevices::pdf(file = paste0(cdir, "/", "dendro_", i, ".pdf"))
         if (length(bwnet$dendrograms) > 1){
           for (j in 1:length(bwnet$dendrograms)){
             WGCNA::plotDendroAndColors(bwnet$dendrograms[[j]], bwModuleColors[bwnet$blockGenes[[j]]],
@@ -347,19 +348,6 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
         }
       }
       utils::write.csv(geneModuleMembership2, paste0(cdir, "/", "Module_membership_", names(X)[MEs_combo[v, 2]], ".csv"))
-
-      # # Testing module membership viz
-      # svglite::svglite(file = paste0(cdir, "/", paste(names(X)[MEs_combo[v, 1]], names(X)[MEs_combo[v, 2]], "module_membership_subset.svg", sep = "_")))
-      # graphics::par(cex.main = 1)
-      # df <- unique(c(unlist(lapply(geneModuleMembership, function(x) utils::tail(rownames(geneModuleMembership)[order(x, decreasing = TRUE)], n = 3))),
-      #                unlist(lapply(geneModuleMembership, function(x) utils::tail(rownames(geneModuleMembership)[order(x, decreasing = FALSE)], n = 3)))))
-      # stats::heatmap(as.matrix(geneModuleMembership[rownames(geneModuleMembership) %in% df, ]), main = paste("module membership of extreme", names(X)[MEs_combo[v, 1]]),
-      #         margins = c(8, 8))
-      # df <- unique(c(unlist(lapply(geneModuleMembership2, function(x) utils::tail(rownames(geneModuleMembership2)[order(x, decreasing = TRUE)], n = 3))),
-      #                unlist(lapply(geneModuleMembership2, function(x) utils::tail(rownames(geneModuleMembership2)[order(x, decreasing = FALSE)], n = 3)))))
-      # stats::heatmap(as.matrix(geneModuleMembership2[rownames(geneModuleMembership2) %in% df, ]), main = paste("module membership of extreme", names(X)[MEs_combo[v, 2]]),
-      #         margins = c(8, 8))
-      # grDevices::dev.off()
       }
   }
 

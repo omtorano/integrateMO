@@ -55,93 +55,23 @@ Running integrate_MO() will generate a folder in the current working directory w
 
 ## integration method
 Integration method specifies which package & method will be employed to integrate data. Note that integrate_MO() is a wrapper for the below packages and appropriate citations to the original packages should be used.
-### sPLS-DA 139.04 6.67 1643.64 
-multiblock sparse partial least squares discriminant anslysis from the mixOmics package. The steps performed with this method closely follow the steps described in the mixOmics vignette linked below.
+### sPLS-DA  
+multiblock sparse partial least squares discriminant anslysis from the mixOmics package (DIABLO N-integration). The steps performed in the integrate_MO() function closely follow those described in the mixOmics vignette linked below.
 Important decision points and outputs:
 - Features from each omic layer are limited to top 10,000 features by median absolute deviation 
 - The design matrix is determined using mixOmics' "data driven" approach. For each omics group cross comparison, PLS with one component is calculated, the
 cross-correlations between components are averaged and used as the off diagonal values of the design matrix.  
 - The number of components is first set to # of treatments + 1, performance evaluation is done with perf(), folds = number of samples in treatment level
-with minimum replicates, nrepeat = 10, final number of components and distance metric selected will be saved in the classification_error_rate plot.
+with minimum replicates, nrepeat = 10, final number of components and distance metric selected will be saved in the figure title of the classification_error_rate plot.
+- The number of variables to select is determined with tune.block.splsda(), folds = 5 and nrepeat = 10. The sequence of numbers tested is c(5:9, seq(10, 50, 5)). The final number
+of variable selected on each component will match the number of rows in the splsda_variables_comp.csv files.
+- The design, number of components, and number of variables to select are saved and input as parameters in the final block.splsda() model. Visualization outputs from final model are weighted average plotIndiv() plots, correlation circle
+plots plotVar(), and clustered image maps cimDiablo() of each component. In tests with tox data sets the number of components in the final model has been <= 4, therefore weighted average and correlation circle plots are created for pairs of
+components up to ncomp = 4.  
+Estimated run time and resourse usage  
+On a 11th Gen Intel(R) Core(TM) i7-1185G7 PC with 4 cores and 8 threads a test run took 3915.49 seconds, 148.90 seconds user CPU time, and 6.11 system CPU time. Saved output from tests is <2MB.
 
-
-
-    diablo.mo <- mixOmics::block.plsda(X, Y, ncomp = length(unique(meta$TRT)) + 1, design = design)
-    perf.diablo.mo <- mixOmics::perf(diablo.mo, validation = "Mfold", folds = min(table(meta$TRT)), nrepeat = 10)
-    ncomp <- min(perf.diablo.mo$choice.ncomp$WeightedVote[2,])
-    # dist_name <- colnames(perf.diablo.mo$choice.ncomp$WeightedVote[,perf.diablo.mo$choice.ncomp$WeightedVote[2,]==ncomp])[1]
-    dist_name <- colnames(perf.diablo.mo$error.rate[[1]])[which(perf.diablo.mo$error.rate[[1]] == min(perf.diablo.mo$error.rate[[1]]),
-                                                                  arr.ind = TRUE)[[2]]]
-    svglite::svglite(file = paste0(cdir, "/", "mixOmics_classification_error_rate.svg"))
-    plot(perf.diablo.mo)
-    graphics::mtext(paste0("comp = ", ncomp, " dist = ", dist_name), side = 3)
-    grDevices::dev.off()
-    test.keepX <- list()
-    for (i in names(X)){
-      test.keepX[[i]] <- c(5:9, seq(10, 25, 5))
-    }
-    for (i in dist_name){
-      tune.diablo.mo <- mixOmics::tune.block.splsda(X, Y, ncomp = ncomp,
-                                            test.keepX = test.keepX, design = design,
-                                            validation = "Mfold", folds = 5, nrepeat = 10,
-                                            # use two CPUs for faster computation
-                                            BPPARAM = BiocParallel::SnowParam(workers = parallel::detectCores()),
-                                            dist = i) # should this error rate match multiomics_pdf?
-    }
-    list.keepX <- tune.diablo.mo$choice.keepX
-    diablo.mo <- mixOmics::block.splsda(X, Y, ncomp = ncomp,
-                                          keepX = list.keepX)
-    for (i in 1:ncomp){
-      values<-vector()
-      for (j in 1:length(X)){
-        values<-rbind(values, as.data.frame(mixOmics::selectVar(diablo.mo, comp = i)[[j]][2]))
-      }
-        if (exists("UF2G")){
-          values[, 2] <- UF2G[match(rownames(values), UF2G$id), 4]
-        }
-
-      utils::write.csv(values, paste0(cdir, "/", "splsda_variables_comp", i, ".csv"))
-    }
-
-    if (ncomp > 1){
-      svglite::svglite(file = paste0(cdir, "/", "mixOmics_plotVar1-2.svg"))
-      mixOmics::plotVar(diablo.mo, var.names = c(TRUE), style = "graphics", legend = TRUE,
-                        title = "DIABLO components 1 - 2")
-      grDevices::dev.off()
-      if (ncomp == 4){
-        svglite::svglite(file = paste0(cdir, "/", "mixOmics_plotVar3-4.svg"))
-        mixOmics::plotVar(diablo.mo, var.names = c(TRUE), style = "graphics", legend = TRUE,
-                          comp = c(3, 4), title = "DIABLO components 3 - 4")
-        grDevices::dev.off()
-      }
-      svglite::svglite(file = paste0(cdir, "/", "mixOmics_plotIndiv1-2.svg"))
-      mixOmics::plotIndiv(diablo.mo, ind.names = FALSE, legend = TRUE, comp = c(1, 2),
-                          title = "DIABLO components 1 - 2", block = "weighted.average")
-      grDevices::dev.off()
-      if (ncomp == 4){
-        svglite::svglite(file = paste0(cdir, "/", "mixOmics_plotIndiv3-4.svg"))
-        mixOmics::plotIndiv(diablo.mo, ind.names = FALSE, legend = TRUE, comp = c(3, 4),
-                            title = "DIABLO components 3 - 4", block = "weighted.average")
-        grDevices::dev.off()
-      }
-      for (i in 1:ncomp){
-        svglite::svglite(file = paste0(cdir, "/", "mixOmics_cim", i, ".svg"))
-        mixOmics::cimDiablo(diablo.mo, comp = i, margin=c(11, 15), legend.position = "topright",
-                            trim = FALSE, size.legend = 0.7)
-        grDevices::dev.off()
-      }
-      for (i in names(X)){
-        svglite::svglite(file = paste0(cdir, "/", "mixOmics_auroc_", i, ".svg"))
-        auc.diablo.mo <- mixOmics::auroc(diablo.mo, roc.block = i, roc.comp = ncomp,
-                                         print = FALSE)
-        grDevices::dev.off()
-      }
-    }
-  }
-
-
-
-mixOmics multiblock sPLS-DA (DIABLO N-integration)  
+Links & references
 - https://mixomicsteam.github.io/mixOmics-Vignette/id_06.html#id_06:diablo  
 - Rohart, F., Gautier, B., Singh, A., & Lê Cao, K. A. (2017). mixOmics: An R package for ‘omics feature selection and multiple data integration. PLoS computational biology, 13(11), e1005752.  
 - Singh, A., Shannon, C. P., Gautier, B., Rohart, F., Vacher, M., Tebbutt, S. J., & Lê Cao, K. A. (2019). DIABLO: an integrative approach for identifying key molecular drivers from multi-omics assays. Bioinformatics, 35(17), 3055-3062.  
@@ -157,11 +87,26 @@ MOFA
 
 
 ### WGCNA 1535.94   66.34 1624.73 
-weighted gene correlation network analysis from WGCNA
+Weighted gene correlation network analysis from the WGCNA package. The steps performed in the integrate_MO() function are based on the WGCNA tutorial linked below.
+Note that this method is currently set up for pairwise comparisons between omics layers.    
+Steps, important decision points, and output:  
+- RRBS features are filtered to top 25% most variable features by median absolute deviation  
+- Omics features are separately clustered for viz purposes with 6 different clustering algorithms, output is saved in hclust_sampleTree file.
+- For omic layers with between 100 and 5,000 features modules are determined with moduleEigengenes() and saved to a lowcount_omics_MEs object. For omic layers with >5,000 modules are created with blockwiseModules() and saved to a
+block_MEs object.
+	- lowcount_omics_MEs: soft thresholding powers tested are c(1:10, seq(from = 12, to = 40, by = 2)), power chosen with pickSoftThreshold(). The power that is chosen will be red in resulting soft_thresholding.svg figure. The
+	minimum module size is set to 1/20 the number of features. Eigengenes are clustered using method = "average". The dissimilarity threshold is set to 0.25, which is used for tree cut height. Uses default pearson unsigned network construction.
+	- block_MEs: same as above, additional options include maxBlockSize = 5000.
+- Output includes hclust_sampleTree.svg showing hierarchical clustering of each omic lyer,
+Module_Eigengenes_heatplot.svg for each omic layer showing the relationship between module eigengenes and samples, Module_Eigengenes.csv contains the eigengene values,
+Module_membership.csv has correlation values of a gene to a module eigengene, Module-module.csv of correlation and p-values show these values for the relationship between
+modules belonging to each omic layer. The drndro.pdf files show module clustering for each omic layer. 
+
 WGCNA  
-- https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/index.html  
+- https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/index.html  -- it looks like this is offline as of 11/7/2023, there are other tutorials but I need to find a permanant replacement, for now try https://bioinformaticsworkbook.org/tutorials/wgcna.html#gsc.tab=0, https://edu.sib.swiss/pluginfile.php/158/course/section/65/_01_SIB2016_wgcna.pdf, https://pages.stat.wisc.edu/~yandell/statgen/ucla/WGCNA/wgcna.pdf
 - Zhang B and Horvath S (2005) A General Framework for Weighted Gene Co-Expression Network Analysis, Statistical Applications in Genetics and Molecular Biology: Vol. 4: No. 1, Article 17 PMID: 16646834  
 - Langfelder P, Horvath S (2008) WGCNA: an R package for weighted correlation network analysis. BMC Bioinformatics 2008, 9:559 (https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-559)
+
 ### SNF
 similarity fusion network from SNF
 
