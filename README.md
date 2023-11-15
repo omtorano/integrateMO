@@ -86,7 +86,7 @@ MOFA
 - Argelaguet, R., Arnol, D., Bredikhin, D., Deloro, Y., Velten, B., Marioni, J. C., & Stegle, O. (2020). MOFA+: a statistical framework for comprehensive integration of multi-modal single-cell data. Genome biology, 21(1), 1-17.  
 
 
-### WGCNA 1535.94   66.34 1624.73 
+### WGCNA
 Weighted gene correlation network analysis from the WGCNA package. The steps performed in the integrate_MO() function are based on the WGCNA tutorial linked below.
 Note that this method is currently set up for pairwise comparisons between omics layers.    
 Steps, important decision points, and output:  
@@ -100,7 +100,10 @@ block_MEs object.
 - Output includes hclust_sampleTree.svg showing hierarchical clustering of each omic lyer,
 Module_Eigengenes_heatplot.svg for each omic layer showing the relationship between module eigengenes and samples, Module_Eigengenes.csv contains the eigengene values,
 Module_membership.csv has correlation values of a gene to a module eigengene, Module-module.csv of correlation and p-values show these values for the relationship between
-modules belonging to each omic layer. The drndro.pdf files show module clustering for each omic layer. 
+modules belonging to each omic layer. The drndro.pdf files show module clustering for each omic layer.  
+Estimated run time and resource usage  
+On a 11th Gen Intel(R) Core(TM) i7-1185G7 PC with 4 cores and 8 threads a test run took 1624.73 seconds, 1535.94 seconds user CPU time, and 66.34 system CPU time. Saved output from tests is <2MB.
+
 
 WGCNA  
 - https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/index.html  -- it looks like this is offline as of 11/7/2023, there are other tutorials but I need to find a permanant replacement, for now try https://bioinformaticsworkbook.org/tutorials/wgcna.html#gsc.tab=0, https://edu.sib.swiss/pluginfile.php/158/course/section/65/_01_SIB2016_wgcna.pdf, https://pages.stat.wisc.edu/~yandell/statgen/ucla/WGCNA/wgcna.pdf
