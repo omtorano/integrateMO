@@ -78,7 +78,7 @@ Links & references
 
 ### MOFA2
 multi-omic factor analysis from MOFA2
-MOFA  
+Links & references
 - https://biofam.github.io/MOFA2/index.html
 - https://raw.githack.com/bioFAM/MOFA2_tutorials/master/R_tutorials/getting_started_R.html  
 - https://raw.githack.com/bioFAM/MOFA2_tutorials/master/R_tutorials/downstream_analysis.html  
@@ -105,22 +105,21 @@ Estimated run time and resource usage
 On a 11th Gen Intel(R) Core(TM) i7-1185G7 PC with 4 cores and 8 threads a test run took 1624.73 seconds, 1535.94 seconds user CPU time, and 66.34 system CPU time. Saved output from tests is <2MB.
 
 
-WGCNA  
+Links & references
 - https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/index.html  -- it looks like this is offline as of 11/7/2023, there are other tutorials but I need to find a permanant replacement, for now try https://bioinformaticsworkbook.org/tutorials/wgcna.html#gsc.tab=0, https://edu.sib.swiss/pluginfile.php/158/course/section/65/_01_SIB2016_wgcna.pdf, https://pages.stat.wisc.edu/~yandell/statgen/ucla/WGCNA/wgcna.pdf
 - Zhang B and Horvath S (2005) A General Framework for Weighted Gene Co-Expression Network Analysis, Statistical Applications in Genetics and Molecular Biology: Vol. 4: No. 1, Article 17 PMID: 16646834  
 - Langfelder P, Horvath S (2008) WGCNA: an R package for weighted correlation network analysis. BMC Bioinformatics 2008, 9:559 (https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-559)
 
 ### SNF
 similarity fusion network from SNF
-
+Links & references
 - https://www.rdocumentation.org/packages/SNFtool/versions/2.3.1/topics/SNF  
 - https://github.com/cran/SNFtool  
 - Wang, B., Mezlini, A. M., Demir, F., Fiume, M., Tu, Z., Brudno, M., ... & Goldenberg, A. (2014). Similarity network fusion for aggregating data types on a genomic scale. Nature methods, 11(3), 333-337.
 
 ### iPCA
 or integrated principal components analysis from iPCA.
-
-iPCA  
+Links & references
 - https://github.com/DataSlingers/iPCA  
 - Tang, T. M., & Allen, G. I. (2021). Integrated principal components analysis. The Journal of Machine Learning Research, 22(1), 8953-9023.
 
