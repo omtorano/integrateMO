@@ -98,29 +98,29 @@ import_MO <- function(rnaseq_counts = NULL,
       }
       pr <- stats::prcomp(t(data_list$rnaseq_counts), center = TRUE)
       proportion_variance <- pr$sdev^2 / sum(pr$sdev^2) * 100
-      par(mar=c(5.1, 4.1, 4.1, 8.1), xpd = TRUE)
+      graphics::par(mar=c(5.1, 4.1, 4.1, 8.1), xpd = TRUE)
       plot(pr$x[, 1], pr$x[, 2], col = TRTColor, main = 'RNAseq norm principal components 1 & 2', pch = 16, cex = 1.5,
            xlab = paste0("Principal Component 1 %", round(proportion_variance[1], 2)),
            ylab = paste0("Principal Component 2 %", round(proportion_variance[2], 2)))
-      legend('topright', inset = c(-0.3, 0),legend = unique(y$samples$group), fill = unique(TRTColor),
+      graphics::legend('topright', inset = c(-0.3, 0),legend = unique(y$samples$group), fill = unique(TRTColor),
              bg = "transparent", bty = "n", title = "Treatment")
       plot(pr$x[, 3], pr$x[, 4], col = TRTColor, main = 'RNAseq norm principal components 3 & 4', pch = 16, cex = 1.5,
           xlab = paste0("Principal Component 3 %", round(proportion_variance[3], 2)),
           ylab = paste0("Principal Component 4 %", round(proportion_variance[4], 2)))
-      legend('topright', inset = c(-0.3, 0),legend = unique(y$samples$group), fill = unique(TRTColor),
+      graphics::legend('topright', inset = c(-0.3, 0),legend = unique(y$samples$group), fill = unique(TRTColor),
              bg = "transparent", bty = "n", title = "Treatment")
-      par(mar = c(5.1, 4.1, 4.1, 2.1))
+      graphics::par(mar = c(5.1, 4.1, 4.1, 2.1))
       #scree plot
-      bp <- barplot(proportion_variance[1:20], ylab = "Proportion variance", xlab = "Principal Components",
+      bp <-  graphics::barplot(proportion_variance[1:20], ylab = "Proportion variance", xlab = "Principal Components",
                     names.arg = c(1:20), col = rep("black", 20), main = "RNAseq scree plot", las = 2)
-      text(bp, proportion_variance[1:20] - 0.5, labels = round(proportion_variance[1:20],
+      graphics::text(bp, proportion_variance[1:20] - 0.5, labels = round(proportion_variance[1:20],
                                                             digits = 2), col = "white", cex = 0.5)
       grDevices::dev.off()
       #MDS
       svglite::svglite(file = paste0(cdir, "/", "rnaseq_norm_PCoA_MDS.svg"))
-      par(mar = c(5.1, 4.1, 4.1, 8.1), xpd = TRUE)
+      graphics::par(mar = c(5.1, 4.1, 4.1, 8.1), xpd = TRUE)
       limma::plotMDS(y, col = TRTColor, pch = 16, gene.selection = "pairwise", top = 500, cex = 1.5)
-      legend("topright", inset = c(-0.25, 0), legend = unique(y$samples$group), fill = unique(TRTColor),
+      graphics::legend("topright", inset = c(-0.25, 0), legend = unique(y$samples$group), fill = unique(TRTColor),
              bg = "transparent", bty = "n", title = "Treatment", cex = 1)
       grDevices::dev.off()
     }
@@ -161,9 +161,9 @@ import_MO <- function(rnaseq_counts = NULL,
       grDevices::dev.off()
       #MDS
       svglite::svglite(file = paste0(cdir, "/", "rrbs_PCoA_MDS.svg"))
-      par(mar = c(5.1, 4.1, 4.1, 8.1), xpd = TRUE)
+      graphics::par(mar = c(5.1, 4.1, 4.1, 8.1), xpd = TRUE)
       limma::plotMDS(data_list$rrbs_mvals, col = TRTColor, pch = 16, gene.selection = "pairwise", top = 500, cex = 1.5)
-      legend('topright', inset = c(-0.25, 0), legend = unique(y$samples$group), fill = unique(TRTColor),
+      graphics::legend('topright', inset = c(-0.25, 0), legend = unique(y$samples$group), fill = unique(TRTColor),
              bg = "transparent", bty = "n", title = "Treatment", cex = 1)
       grDevices::dev.off()
     }

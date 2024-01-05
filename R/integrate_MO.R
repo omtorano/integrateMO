@@ -150,7 +150,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
     traitColors <- WGCNA::numbers2colors(TRT_number, signed = FALSE)
     # rnaseq counts are already logged
     for (i in names(X)){
-      sgrDevices::pdf(file = paste0(cdir, "/", "hclust_", i, "_sampleTree.pdf"))
+      grDevices::pdf(file = paste0(cdir, "/", "hclust_", i, "_sampleTree.pdf"))
       sampleTree <- fastcluster::hclust(stats::dist(X[[i]]), method = "average")
       #cluster with metadata
       WGCNA::plotDendroAndColors(fastcluster::hclust(stats::dist(X[[i]]), method = "single"), traitColors,
