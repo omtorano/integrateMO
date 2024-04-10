@@ -1,7 +1,7 @@
 # integrateMO 
 This is a wrapper package to normalize and integrate common omics data types collected during toxicological exposure studies. This package contains two functions import_MO(), see R/import_MO.R, for importing data with an option to normalize, and integrate_MO(), see R/integrate_MO.R, to integrate omics layers.
 
-What does "wrapper package" mean here? It means that algoriths used to integrate data employed within integrate_MO() come from other packages. These statistical methods were developed by other groups and deployed within R packages/scripts. integrateMO is a package developed to streamline the use of these disperate methods for omics data collected on toxicological exposure data. Using integrateMO means you're actually using one of the "wrapped" packages and citations should be made accordingly, see "References & links for information on integration methods".
+"Wrapper package" means that the algoriths used to integrate data within integrate_MO() come from other packages. The associated statistical methods were developed by other groups and deployed within R packages/scripts. integrateMO is a package developed to streamline the use of these different methods for omics data collected on toxicological exposure data. Using integrateMO means you're actually using one of the "wrapped" packages and citations should be made accordingly, see "References & links for information on integration methods".
 
 # Import
 import_MO() has eight parameter inputs
