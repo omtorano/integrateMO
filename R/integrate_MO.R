@@ -15,13 +15,14 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
   if (is.null(data_list)) stop("No data provided, run import function")
 
   cdir <- paste("integrateMO", int_method, Sys.time(), sep = "_")
+  cdir <- gsub("\\..*", "", cdir)
   cdir <- gsub(":", ".", cdir)
   dir.create(cdir)
 
   # Integrate
 
   int_method <- match.arg(int_method)
-  cat("Using",int_method,"in as integration method\n")
+  cat("Using",int_method,"as integration method\n")
   X <- list()
   for (i in names(data_list[lengths(data_list) != 0])){
     X[[i]] <- as.data.frame(t(data_list[[i]]))
@@ -44,13 +45,13 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
           X[[i]] <- X[[i]][, order(apply(X[[i]], 2, mad), decreasing = TRUE)[1:10000]]
           cat("Limiting", i,"to top 10,000 most variable features using median absolute deviation\n")
         }else{
-          cat("Using all", ncol(X[[i]]), "rnaseq_counts features\n")
+          cat("Using all", ncol(X[[i]]), i, "features\n")
         }
       }
     }
     Y <- as.factor(meta$TRT)
     # doing "data driven" approach to setting design matrix
-    test_combo <- gtools::combinations(n = length(X), r = 2, v = 1:length(X))
+    test_combo <- gtools::combinations(n = length(X), r = 2, v = 1:length(X)) #define what this is doing
     test_vec <- vector()
     for (i in nrow(test_combo)){
       res1 <- mixOmics::pls(X[[test_combo[i, 1]]], X[[test_combo[i ,2]]], ncomp = 1)
@@ -63,10 +64,10 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
     diag(design) <- 0
     diablo.mo <- mixOmics::block.plsda(X, Y, ncomp = length(unique(meta$TRT)) + 1, design = design)
     perf.diablo.mo <- mixOmics::perf(diablo.mo, validation = "Mfold", folds = min(table(meta$TRT)), nrepeat = 10)
-    ncomp <- min(perf.diablo.mo$choice.ncomp$WeightedVote[2,])
+    ncomp <- min(perf.diablo.mo$choice.ncomp$WeightedVote[2, ])
     # dist_name <- colnames(perf.diablo.mo$choice.ncomp$WeightedVote[,perf.diablo.mo$choice.ncomp$WeightedVote[2,]==ncomp])[1]
     dist_name <- colnames(perf.diablo.mo$error.rate[[1]])[which(perf.diablo.mo$error.rate[[1]] == min(perf.diablo.mo$error.rate[[1]]),
-                                                                  arr.ind = TRUE)[[2]]]
+                                                                arr.ind = TRUE)[1, 2]]
     svglite::svglite(file = paste0(cdir, "/", "classification_error_rate.svg"))
     plot(perf.diablo.mo)
     graphics::mtext(paste0("components=", ncomp, " distance=", dist_name), side = 3)
@@ -87,14 +88,14 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
     diablo.mo <- mixOmics::block.splsda(X, Y, ncomp = ncomp,
                                           keepX = list.keepX)
     for (i in 1:ncomp){
-      values<-vector()
+      values <- vector()
       for (j in 1:length(X)){
-        values<-rbind(values, as.data.frame(mixOmics::selectVar(diablo.mo, comp = i)[[j]][2]))
+        values <- rbind(values, as.data.frame(mixOmics::selectVar(diablo.mo, comp = i)[[j]][2]))
       }
         if (exists("UF2G")){
           values[, 2] <- UF2G[match(rownames(values), UF2G$id), 4]
+          colnames(values) <- c("value", "associated_gene")
         }
-      colnames(values) <- c("value", "associated_gene")
       utils::write.csv(values, paste0(cdir, "/", "splsda_variables_comp", i, ".csv"))
     }
 
@@ -156,21 +157,24 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
       WGCNA::plotDendroAndColors(fastcluster::hclust(stats::dist(X[[i]]), method = "single"), traitColors,
                                  groupLabels = colnames(meta)[2],
                                  main = paste("Single clustering dendro", i))
-      WGCNA::plotDendroAndColors(fastcluster::hclust(stats::dist(X[[i]]), method = "average"), traitColors,
-                                 groupLabels = colnames(meta)[2],
-                                 main = paste("Average clustering dendro", i))
       WGCNA::plotDendroAndColors(fastcluster::hclust(stats::dist(X[[i]]), method = "complete"), traitColors,
                                  groupLabels = colnames(meta)[2],
                                  main = paste("Complete clustering dendro", i))
+      WGCNA::plotDendroAndColors(fastcluster::hclust(stats::dist(X[[i]]), method = "average"), traitColors,
+                                 groupLabels = colnames(meta)[2],
+                                 main = paste("Average clustering dendro", i))
+      WGCNA::plotDendroAndColors(fastcluster::hclust(stats::dist(X[[i]]), method = "centroid"), traitColors,
+                                 groupLabels = colnames(meta)[2],
+                                 main = paste("Centroid clustering dendro", i))
       WGCNA::plotDendroAndColors(fastcluster::hclust(stats::dist(X[[i]]), method = "median"), traitColors,
                                  groupLabels = colnames(meta)[2],
                                  main = paste("Median clustering dendro", i))
       WGCNA::plotDendroAndColors(fastcluster::hclust(stats::dist(X[[i]]), method = "mcquitty"), traitColors,
                                  groupLabels = colnames(meta)[2],
                                  main = paste("Mcquitty clustering dendro", i))
-      WGCNA::plotDendroAndColors(fastcluster::hclust(stats::dist(X[[i]]), method = "ward.D"), traitColors,
+      WGCNA::plotDendroAndColors(fastcluster::hclust(stats::dist(X[[i]]), method = "ward.D2"), traitColors,
                                  groupLabels = colnames(meta)[2],
-                                 main = paste("ward.D clustering dendro", i))
+                                 main = paste("ward.D2 clustering dendro", i))
       grDevices::dev.off()
       # Module detection one step - for low feature count omic layers but if very low dont need to cluster
       if (length(X[[i]]) > 100 && length(X[[i]]) < 5000){
@@ -357,7 +361,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
     #    X[[i]]<-as.data.frame(t(X[[i]]))
     #  }
     if (!is.null(X$rrbs_mvals)){
-      X$rrbs_mvals <- X$rrbs_mvals[, order(apply(X$rrbs_mvals, 2, mad), decreasing = TRUE)[1:(.25 * ncol(X$rrbs_mvals))]]
+      X$rrbs_mvals <- X$rrbs_mvals[, order(apply(X$rrbs_mvals, 2, mad), decreasing = TRUE)[1:(0.25 * ncol(X$rrbs_mvals))]]
       cat("Limiting rrbs_mvals to top", ncol(X$rrbs_mvals), "most variable using median absolute deviation\n")}
     if (length(meta$sample) < 20){
       K <- length(meta$sample) - 1
@@ -401,8 +405,9 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
     svglite::svglite(file = paste0(cdir, "/" , "network_map.svg"))
     #normalized mutual information close to 1, good, close to zero not similar
     #plot works but is not saving correctly
-    GGally::ggnet2(net, label = rownames(meta), color = "group", label.size = 2, label.color = "yellow", edge.size = "weights") +
-    ggplot2::ggtitle(paste0("NMI=", round(SNFtool::calNMI(group, truelabel), 2)))
+    g <- GGally::ggnet2(net, label = rownames(meta), color = "group", label.size = 2, label.color = "yellow", edge.size = "weights") +
+      ggplot2::ggtitle(paste0("NMI=", round(SNFtool::calNMI(group, truelabel), 2)))
+    print(g)
     grDevices::dev.off()
 
   }

@@ -57,6 +57,7 @@ import_MO <- function(rnaseq_counts = NULL,
 
     if(norm == TRUE){
       cdir <- paste("MOnorm", Sys.time(), sep = "_")
+	  cdir <- gsub("\\..*", "", cdir)
       cdir <- gsub(":", ".", cdir)
       dir.create(cdir)
 
@@ -69,7 +70,9 @@ import_MO <- function(rnaseq_counts = NULL,
       # sub-setting %20 of rows for plots
       select_rows <- sample(nrow(data_list$rnaseq_counts), length(rownames(data_list$rnaseq_counts)) * .2)
       suppressWarnings(graphics::boxplot(log2(data_list$rnaseq_counts[select_rows, ] + 1),
-                       main = paste("log2 raw counts\n n =", length(data_list$rnaseq_counts[, 1])), las = 2))
+                       main = paste("log2 raw counts\n n =", length(data_list$rnaseq_counts[, 1])), las = 2,
+                       yaxt = "n", cex.axis = .6))
+      axis(2, cex.axis = 1)
       y <- edgeR::DGEList(counts = data_list$rnaseq_counts, group = meta$TRT)
       keep <- edgeR::filterByExpr(y)
       y <- y[keep,,keep.lib.sizes = FALSE]
@@ -83,13 +86,15 @@ import_MO <- function(rnaseq_counts = NULL,
       }
       #sub-setting %20 of rows for plots
       select_rows <- sample(nrow(data_list$rnaseq_counts), length(rownames(data_list$rnaseq_counts)) * .2)
+      select_rows <- sample(nrow(data_list$rnaseq_counts), length(rownames(data_list$rnaseq_counts)) * .2)
       suppressWarnings(graphics::boxplot(data_list$rnaseq_counts[select_rows, ],
-                               main = paste("log2 low expression filter &\n TMM norm counts\n n =",
-                               length(data_list$rnaseq_counts[, 1])), las = 2))
+                                         main = paste("log2 low expression filter &\n TMM norm counts\n n =",
+                                                      length(data_list$rnaseq_counts[, 1])), las = 2, yaxt = "n", cex.axis = .6))
+      axis(2, cex.axis = 1)
       grDevices::dev.off()
       #Normalization independent visualizations
       #PCA
-      svglite::svglite(file = paste0(cdir, "/", "rnaseq_norm_PCAs_scree.svg"))
+      svglite::svglite(file = paste0(cdir, "/", "rnaseq_norm_PCA1.svg"))
       TRTColor <- as.numeric(y$samples$group) + .01
       #TRT can only be 5 here
       color_options<-c("red3", "coral","green3", "purple", "black", "blue")
@@ -98,19 +103,24 @@ import_MO <- function(rnaseq_counts = NULL,
       }
       pr <- stats::prcomp(t(data_list$rnaseq_counts), center = TRUE)
       proportion_variance <- pr$sdev^2 / sum(pr$sdev^2) * 100
-      graphics::par(mar=c(5.1, 4.1, 4.1, 8.1), xpd = TRUE)
+      graphics::par(mar = c(5.1, 4.1, 4.1, 8.1), xpd = TRUE)
       plot(pr$x[, 1], pr$x[, 2], col = TRTColor, main = 'RNAseq norm principal components 1 & 2', pch = 16, cex = 1.5,
            xlab = paste0("Principal Component 1 %", round(proportion_variance[1], 2)),
            ylab = paste0("Principal Component 2 %", round(proportion_variance[2], 2)))
-      graphics::legend('topright', inset = c(-0.3, 0),legend = unique(y$samples$group), fill = unique(TRTColor),
+      graphics::legend('topright', inset = c(-grDevices::dev.size()[1] * 0.012, 0),legend = unique(y$samples$group), fill = unique(TRTColor),
              bg = "transparent", bty = "n", title = "Treatment")
+      grDevices::dev.off()
+      svglite::svglite(file = paste0(cdir, "/", "rnaseq_norm_PCA2.svg"))
+      graphics::par(mar = c(5.1, 4.1, 4.1, 8.1), xpd = TRUE)
       plot(pr$x[, 3], pr$x[, 4], col = TRTColor, main = 'RNAseq norm principal components 3 & 4', pch = 16, cex = 1.5,
           xlab = paste0("Principal Component 3 %", round(proportion_variance[3], 2)),
           ylab = paste0("Principal Component 4 %", round(proportion_variance[4], 2)))
-      graphics::legend('topright', inset = c(-0.3, 0),legend = unique(y$samples$group), fill = unique(TRTColor),
+      graphics::legend('topright', inset = c(-grDevices::dev.size()[1] * 0.012, 0),legend = unique(y$samples$group), fill = unique(TRTColor),
              bg = "transparent", bty = "n", title = "Treatment")
-      graphics::par(mar = c(5.1, 4.1, 4.1, 2.1))
+      grDevices::dev.off()
       #scree plot
+      svglite::svglite(file = paste0(cdir, "/", "rnaseq_norm_PCA_scree.svg"))
+      graphics::par(mar = c(5.1, 4.1, 4.1, 2.1), xpd = TRUE)
       bp <-  graphics::barplot(proportion_variance[1:20], ylab = "Proportion variance", xlab = "Principal Components",
                     names.arg = c(1:20), col = rep("black", 20), main = "RNAseq scree plot", las = 2)
       graphics::text(bp, proportion_variance[1:20] - 0.5, labels = round(proportion_variance[1:20],
@@ -120,7 +130,7 @@ import_MO <- function(rnaseq_counts = NULL,
       svglite::svglite(file = paste0(cdir, "/", "rnaseq_norm_PCoA_MDS.svg"))
       graphics::par(mar = c(5.1, 4.1, 4.1, 8.1), xpd = TRUE)
       limma::plotMDS(y, col = TRTColor, pch = 16, gene.selection = "pairwise", top = 500, cex = 1.5)
-      graphics::legend("topright", inset = c(-0.25, 0), legend = unique(y$samples$group), fill = unique(TRTColor),
+      graphics::legend("topright", inset = c(-grDevices::dev.size()[1] * 0.012, 0), legend = unique(y$samples$group), fill = unique(TRTColor),
              bg = "transparent", bty = "n", title = "Treatment", cex = 1)
       grDevices::dev.off()
     }
@@ -131,7 +141,8 @@ import_MO <- function(rnaseq_counts = NULL,
       data_list$metab_peaks <- data_list$metab_peaks[rowSums(data_list$metab_peaks) > 0, ]
       svglite::svglite(file = paste0(cdir, "/" , "metab_impute_norm_filter.svg"))
       graphics::par(mfrow = c(1, 2))
-      graphics::boxplot(data_list$metab_peaks, main = "Raw values", las = 2)
+      graphics::boxplot(data_list$metab_peaks, main = "Raw values", las = 2, yaxt = "n", cex.axis = .6)
+      axis(2, cex.axis = 1)
       #add zero impute step
       data_list$metab_peaks <- sweep(data_list$metab_peaks * 1000, 1, rowSums(data_list$metab_peaks), FUN = "/")
       data_list$metab_peaks <- as.data.frame(IMIFA::pareto_scale(data_list$metab_peaks), centering = FALSE)
@@ -140,7 +151,43 @@ import_MO <- function(rnaseq_counts = NULL,
         data_list$rnaseq_counts <- sva::ComBat(data_list$metab_peaks, meta$batch_metab, mod = as.factor(meta$TRT))
 
       }
-      graphics::boxplot(data_list$metab_peaks, main = "Sum peak norm\n & Pareto scale counts", las = 2)
+      print("metab viz")
+      graphics::boxplot(data_list$metab_peaks, main = "Sum peak norm\n & Pareto scale counts", las = 2,
+                        yaxt = "n", cex.axis = .6)
+      axis(2, cex.axis = 1)
+      grDevices::dev.off()
+      svglite::svglite(file = paste0(cdir, "/", "metab_norm_PCA1.svg"))
+      TRTColor <- as.numeric(y$samples$group) + .01
+      #TRT can only be 5 here
+      color_options<-c("red3", "coral","green3", "purple", "black", "blue")
+      for(i in 1:length(unique(TRTColor))) {
+        TRTColor <- gsub(unique(TRTColor)[i], color_options[i], TRTColor)
+      }
+      pr <- stats::prcomp(t(data_list$metab_peaks), center = TRUE)
+      proportion_variance <- pr$sdev^2 / sum(pr$sdev^2) * 100
+      graphics::par(mar = c(5.1, 4.1, 4.1, 8.1), xpd = TRUE)
+      plot(pr$x[, 1], pr$x[, 2], col = TRTColor, main = 'Metab norm principal components 1 & 2', pch = 16, cex = 1.5,
+           xlab = paste0("Principal Component 1 %", round(proportion_variance[1], 2)),
+           ylab = paste0("Principal Component 2 %", round(proportion_variance[2], 2)))
+      graphics::legend('topright', inset = c(-grDevices::dev.size()[1] * 0.012, 0),
+                       legend = unique(y$samples$group), fill = unique(TRTColor),
+                       bg = "transparent", bty = "n", title = "Treatment")
+      grDevices::dev.off()
+      svglite::svglite(file = paste0(cdir, "/", "metab_norm_PCA2.svg"))
+      graphics::par(mar = c(5.1, 4.1, 4.1, 8.1), xpd = TRUE)
+      plot(pr$x[, 3], pr$x[, 4], col = TRTColor, main = 'Metab norm principal components 3 & 4', pch = 16, cex = 1.5,
+           xlab = paste0("Principal Component 3 %", round(proportion_variance[3], 2)),
+           ylab = paste0("Principal Component 4 %", round(proportion_variance[4], 2)))
+      graphics::legend('topright', inset = c(c(-grDevices::dev.size()[1] * 0.012, 0), 0),legend = unique(y$samples$group), fill = unique(TRTColor),
+                       bg = "transparent", bty = "n", title = "Treatment")
+      grDevices::dev.off()
+      #scree plot
+      svglite::svglite(file = paste0(cdir, "/", "metab_norm_PCA_scree.svg"))
+      graphics::par(mar = c(5.1, 4.1, 4.1, 2.1), xpd = TRUE)
+      bp <-  graphics::barplot(proportion_variance[1:20], ylab = "Proportion variance", xlab = "Principal Components",
+                               names.arg = c(1:20), col = rep("black", 20), main = "Metab scree plot", las = 2)
+      graphics::text(bp, proportion_variance[1:20] - 0.5, labels = round(proportion_variance[1:20],
+                                                                         digits = 2), col = "white", cex = 0.5)
       grDevices::dev.off()
     }
 
