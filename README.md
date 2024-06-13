@@ -1,7 +1,7 @@
 # integrateMO 
-This is a wrapper package to normalize and integrate common omics data types collected during toxicological exposure studies. This package contains two functions import_MO(), see R/import_MO.R, for importing data with an option to normalize, and integrate_MO(), see R/integrate_MO.R, to integrate omics layers.
+This is a wrapper package to normalize and integrate common omics data types collected during toxicological exposure studies. This package contains two functions import_MO(), see R/import_MO(), for importing data with an option to normalize, and integrate_MO(), see R/integrate_MO(), to integrate omics layers.
 
-"Wrapper package" means that the algoriths used to integrate data within integrate_MO() come from other packages. The associated statistical methods were developed by other groups and deployed within R packages/scripts. integrateMO is a package developed to streamline the use of these different methods for omics data collected on toxicological exposure data. Using integrateMO means you're actually using one of the "wrapped" packages and citations should be made accordingly, see "References & links for information on integration methods".
+"wrapper package" means that algoriths used to integrate data employed within integrate_MO() come from other packages. These statistical methods were developed by other groups and deployed within R packages/scripts. integrateMO is a package developed to streamline the use of these disperate methods for omics data collected on toxicological exposure data. Using integrateMO means you're actually using one of the "wrapped" packages and citations should be made accordingly, see "References & links for information on integration methods".
 
 # Import
 import_MO() has eight parameter inputs
@@ -11,7 +11,7 @@ import_MO() has eight parameter inputs
 - rrbs_mvals: Data matrix of RRBS m-values
 - mirna_counts: Data matrix of microRNA counts
 - pirna_counts: Data matrix of piRNA counts
-- meta: Metadata, must have sample ids in first column matching those in omics data and treatment col called TRT, if batch correction is required must also have unique batch column for each omics layer with batches. 
+- meta: Metadata, must have sample ids in first column matching those in omics data and treatment col called TRT, if batch correction is required must also have unique batch column for each omics layer with batches 
 - norm: Normalization, true or false, default true
 - batch: Omics layers with batches corresponding to "batch_omic" columns in metadata, column labels as follows: batch_rna, batch_metab, batch_rrbs
 
@@ -22,7 +22,7 @@ import_MO(rnaseq_counts = counts, rrbs_mvals = mvals, metab_peaks = metab, meta 
 ```
 The orientation of the omics data matricies does not matter. Samples can be either row names or column names and features can be row names or column names. Sample names must be either row or column names (i.e. not the first row or first column) and must match the row names of the metadata.
 ## Function output
-Running import_MO() will save a data list “data_list” to the global environment. The elements of this list are composed of the omics layers provided. If the normalization option is set to “true” this function will also output a MOnorm folder to the current working directory. This folder will be labeled with the current date and time, so rerunning will not overwrite previous results. This folder will contain visualizations of the omics layers provided including boxplots, PCA, scree, and MDS plots. 
+Running import_MO() will save a data list named “data_list” to the global environment. The elements of this list are composed of the omics layers provided. If the normalization option is set to “TRUE” this function will also output a MOnorm folder to the current working directory. This folder will be labeled with the current date and time, so rerunning will not overwrite previous results. The MOnorm folder will contain visualizations of the omics layers provided including boxplots, PCA, scree, and MDS plots. 
 
 ## Normalization 
 The following steps are executed if norm = TRUE
@@ -54,7 +54,7 @@ integrate_MO(int_method = "sPLS-DA", RRBS_feature_map = ML-0_1000-1000_0.8_Uniqu
 Running integrate_MO() will generate a folder in the current working directory with the following naming convention "integrateMO_*integration method*_*year-month-day time*". The contents of the folder depend on the integration method chosen, details below.
 
 ## integration method
-Integration method specifies which package & method will be employed to integrate data. Note that integrate_MO() is a wrapper for the below packages and appropriate citations to the original packages should be used.
+Integration method specifies which package & method will be employed to integrate data. Note that integrate_MO() is a wrapper for the packages described below and appropriate citations to the original packages should be used.
 ### sPLS-DA  
 multiblock sparse partial least squares discriminant anslysis from the mixOmics package (DIABLO N-integration). The steps performed in the integrate_MO() function closely follow those described in the mixOmics vignette linked below.
 Important decision points and outputs:
@@ -87,11 +87,18 @@ Links & references
 
 
 ### WGCNA
-Weighted gene correlation network analysis from the WGCNA package. The steps performed in the integrate_MO() function are based on the WGCNA tutorial linked below.
+Weighted gene correlation network analysis from the WGCNA package. The steps performed in the integrate_MO() function are based on the WGCNA tutorial in WGCNAtutorials.
 Note that this method is currently set up for pairwise comparisons between omics layers.    
 Steps, important decision points, and output:  
-- RRBS features are filtered to top 25% most variable features by median absolute deviation  
-- Omics features are separately clustered for viz purposes with 6 different clustering algorithms, output is saved in hclust_sampleTree file.
+- If present RRBS features are filtered to top 25% most variable features by median absolute deviation. 
+- Omics features are separately clustered for viz purposes with 7 different clustering algorithms within the hclust() function, output is saved in hclust_sampleTree file. Information below gathered from https://cicerocq.wordpress.com/wp-content/uploads/2019/05/cluster-analysis_5ed_everitt.pdf Chapter 4 Hierarchical Clustering, Statistics and Data Analysis in Geology Chapter 6 and Unsupervised Methods Allen (slides in resources).
+	- Single aka nearest neighbor, distance between groups is defined as that of the closest pair of individuals. Sensitive to outliers so can be useful in identifying potential outliers.
+	- Complete aka furthest neighbor, distance between two groups is defined as most distant pair of individuals. 
+	- Average - UPGMA unweighted pair-group method using the average approach, distance between two clusters is average of the distance.  between all pairs of individuals that are made up of one individual from each group, in short the average of all pairwise distances.  
+	- Centroid UPGMC unweighted pair-group method using centroid approach, merges clusters with most similar mean vectors.
+	- Median WPGMC weighted pair-group methods using the centroid approach, weights centroids equally to produce new centroid of merged cluster. This avoids clusters with numerous objects dominating cluster with few objects when merged.
+	- Mcquitty WPGMA weighted average linkage. Also weights clusters, points in small clusters weighted more highly than points in large clusters.
+	- Ward.D2 fusion of clusters is based on the size of error sum-of-square criterion. Similar to centroids method but centroids are weights. Sensitive to outliers.
 - For omic layers with between 100 and 5,000 features modules are determined with moduleEigengenes() and saved to a lowcount_omics_MEs object. For omic layers with >5,000 modules are created with blockwiseModules() and saved to a
 block_MEs object.
 	- lowcount_omics_MEs: soft thresholding powers tested are c(1:10, seq(from = 12, to = 40, by = 2)), power chosen with pickSoftThreshold(). The power that is chosen will be red in resulting soft_thresholding.svg figure. The
@@ -106,7 +113,7 @@ On a 11th Gen Intel(R) Core(TM) i7-1185G7 PC with 4 cores and 8 threads a test r
 
 
 Links & references
-- https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/index.html  -- it looks like this is offline as of 11/7/2023, there are other tutorials but I need to find a permanant replacement, for now try https://bioinformaticsworkbook.org/tutorials/wgcna.html#gsc.tab=0, https://edu.sib.swiss/pluginfile.php/158/course/section/65/_01_SIB2016_wgcna.pdf, https://pages.stat.wisc.edu/~yandell/statgen/ucla/WGCNA/wgcna.pdf
+- https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/Rpackages/WGCNA/index.html  -- it looks like this is offline as of 11/7/2023, there are other tutorials but no permanant replacement yet. The contents of this tutorial are available in this repo, see WGCNAtutorials (see https://bioinformatics.stackexchange.com/questions/21885/where-to-access-the-wgcna-tutorial-documents-horvath-lab-site-down). Other tutorials are also available including https://bioinformaticsworkbook.org/tutorials/wgcna.html#gsc.tab=0, https://edu.sib.swiss/pluginfile.php/158/course/section/65/_01_SIB2016_wgcna.pdf, https://pages.stat.wisc.edu/~yandell/statgen/ucla/WGCNA/wgcna.pdf.
 - Zhang B and Horvath S (2005) A General Framework for Weighted Gene Co-Expression Network Analysis, Statistical Applications in Genetics and Molecular Biology: Vol. 4: No. 1, Article 17 PMID: 16646834  
 - Langfelder P, Horvath S (2008) WGCNA: an R package for weighted correlation network analysis. BMC Bioinformatics 2008, 9:559 (https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-559)
 
