@@ -24,6 +24,12 @@ Imports:
 	sva,
 	BiocParallel,
 	svglite
+Remotes: 
+	bioc::release/edgeR
+	bioc::release/limma
+	bioc::release/mixOmics
+	bioc::release/sva
+	bioc::release/BiocParallel
 Depends: 
     R (>= 2.10)
 LazyData: true
