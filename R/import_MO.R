@@ -90,7 +90,7 @@ import_MO <- function(rnaseq_counts = NULL,
       suppressWarnings(graphics::boxplot(data_list$rnaseq_counts[select_rows, ],
                                          main = paste("log2 low expression filter &\n TMM norm counts\n n =",
                                                       length(data_list$rnaseq_counts[, 1])), las = 2, yaxt = "n", cex.axis = .6))
-      axis(2, cex.axis = 1)
+      graphics::axis(2, cex.axis = 1)
       grDevices::dev.off()
       #Normalization independent visualizations
       #PCA
@@ -142,7 +142,7 @@ import_MO <- function(rnaseq_counts = NULL,
       svglite::svglite(file = paste0(cdir, "/" , "metab_impute_norm_filter.svg"))
       graphics::par(mfrow = c(1, 2))
       graphics::boxplot(data_list$metab_peaks, main = "Raw values", las = 2, yaxt = "n", cex.axis = .6)
-      axis(2, cex.axis = 1)
+      graphics::axis(2, cex.axis = 1)
       #add zero impute step
       data_list$metab_peaks <- sweep(data_list$metab_peaks * 1000, 1, rowSums(data_list$metab_peaks), FUN = "/")
       data_list$metab_peaks <- as.data.frame(IMIFA::pareto_scale(data_list$metab_peaks), centering = FALSE)
@@ -154,7 +154,7 @@ import_MO <- function(rnaseq_counts = NULL,
       print("metab viz")
       graphics::boxplot(data_list$metab_peaks, main = "Sum peak norm\n & Pareto scale counts", las = 2,
                         yaxt = "n", cex.axis = .6)
-      axis(2, cex.axis = 1)
+      graphics::axis(2, cex.axis = 1)
       grDevices::dev.off()
       svglite::svglite(file = paste0(cdir, "/", "metab_norm_PCA1.svg"))
       TRTColor <- as.numeric(y$samples$group) + .01

@@ -12,13 +12,16 @@ Imports:
     edgeR,
     GGally,
     ggplot2,
+    IMIFA,
     limma,
+	sva,
     network,
     SNFtool,
 	gtools,
 	mixOmics,
 	dynamicTreeCut,
 	fastcluster,
+	WGCNA,
 	BiocParallel,
 	svglite
 Remotes: 
