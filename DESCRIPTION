@@ -23,15 +23,13 @@ Imports:
 	fastcluster,
 	WGCNA,
 	BiocParallel,
-	svglite,
-	BiocManager
+	svglite
 Remotes: 
 	bioc::release/edgeR,
 	bioc::release/limma,
 	bioc::release/mixOmics,
 	bioc::release/sva,
 	bioc::release/BiocParallel,
-	bioc::WGCNA,
 	bioc::release/IMIFA
 Depends: 
     R (>= 2.10)
