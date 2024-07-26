@@ -72,7 +72,7 @@ import_MO <- function(rnaseq_counts = NULL,
       suppressWarnings(graphics::boxplot(log2(data_list$rnaseq_counts[select_rows, ] + 1),
                        main = paste("log2 raw counts\n n =", length(data_list$rnaseq_counts[, 1])), las = 2,
                        yaxt = "n", cex.axis = .6))
-      axis(2, cex.axis = 1)
+      graphics::axis(2, cex.axis = 1)
       y <- edgeR::DGEList(counts = data_list$rnaseq_counts, group = meta$TRT)
       keep <- edgeR::filterByExpr(y)
       y <- y[keep,,keep.lib.sizes = FALSE]
@@ -210,7 +210,7 @@ import_MO <- function(rnaseq_counts = NULL,
       svglite::svglite(file = paste0(cdir, "/", "rrbs_PCoA_MDS.svg"))
       graphics::par(mar = c(5.1, 4.1, 4.1, 8.1), xpd = TRUE)
       limma::plotMDS(data_list$rrbs_mvals, col = TRTColor, pch = 16, gene.selection = "pairwise", top = 500, cex = 1.5)
-      graphics::legend('topright', inset = c(-0.25, 0), legend = unique(y$samples$group), fill = unique(TRTColor),
+      graphics::legend('topright', inset = c(-grDevices::dev.size()[1] * 0.012, 0), legend = unique(y$samples$group), fill = unique(TRTColor),
              bg = "transparent", bty = "n", title = "Treatment", cex = 1)
       grDevices::dev.off()
     }
