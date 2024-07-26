@@ -29,8 +29,7 @@ Remotes:
 	bioc::release/limma,
 	bioc::release/mixOmics,
 	bioc::release/sva,
-	bioc::release/BiocParallel,
-	bioc::release/IMIFA
+	bioc::release/BiocParallel
 Depends: 
     R (>= 2.10)
 LazyData: true
