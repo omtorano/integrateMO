@@ -12,7 +12,6 @@ Imports:
     edgeR,
     GGally,
     ggplot2,
-    IMIFA,
     limma,
     network,
     SNFtool,
@@ -20,8 +19,6 @@ Imports:
 	mixOmics,
 	dynamicTreeCut,
 	fastcluster,
-	WGCNA,
-	sva,
 	BiocParallel,
 	svglite
 Remotes: 
@@ -29,7 +26,9 @@ Remotes:
 	bioc::release/limma,
 	bioc::release/mixOmics,
 	bioc::release/sva,
-	bioc::release/BiocParallel
+	bioc::release/BiocParallel,
+	bioc::release/WGCNA,
+	bioc::release/IMIFA
 Depends: 
     R (>= 2.10)
 LazyData: true
