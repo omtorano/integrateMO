@@ -1,10 +1,22 @@
-# integrateMO 
-This is a wrapper package to normalize and integrate common omics data types collected during toxicological exposure studies. This package contains two functions import_MO(), see R/import_MO(), for importing data with an option to normalize, and integrate_MO(), see R/integrate_MO(), to integrate omics layers.
+# Overview
+This is a wrapper package to normalize and integrate common omics data types collected during toxicological exposure studies. This package contains two functions: 
+	- import_MO(), see R/import_MO(), for importing data with an option to normalize
+	- integrate_MO(), see R/integrate_MO(), to integrate omics layers
 
 "wrapper package" means that algoriths used to integrate data employed within integrate_MO() come from other packages. These statistical methods were developed by other groups and deployed within R packages/scripts. integrateMO is a package developed to streamline the use of these disperate methods for omics data collected on toxicological exposure data. Using integrateMO means you're actually using one of the "wrapped" packages and citations should be made accordingly, see "References & links for information on integration methods".
 
-# Import
-import_MO() has eight parameter inputs
+# Install importMO & associated packages
+Most packages will be installed within the installation of integrateMO. Several packages must be installed seperately which can be accomplished by running install_run.R. The following code can be run to install integrateMO from github.
+```
+# Install the package from GitHub & add to library
+devtools::install_github("omtorano/integrateMO")
+library(integrateMO)
+```
+
+# Step 1: Import data with import_MO()
+Step one of the integration workflow is to import omics data & associated metadata with the importMO() function. Within this function data are reformatted and an optional normalization step is executed, see Normalization section for further details. importMO() must be run before integrateMO().
+
+import_MO() has eight parameter inputs:
 
 - rnaseq_counts: Data matrix of RNAseq counts 
 - metab_peaks: Data matrix of metabolite peaks
@@ -22,43 +34,51 @@ import_MO(rnaseq_counts = counts, rrbs_mvals = mvals, metab_peaks = metab, meta 
 ```
 The orientation of the omics data matricies does not matter. Samples can be either row names or column names and features can be row names or column names. Sample names must be either row or column names (i.e. not the first row or first column) and must match the row names of the metadata.
 ## Function output
-Running import_MO() will save a data list named “data_list” to the global environment. The elements of this list are composed of the omics layers provided. If the normalization option is set to “TRUE” this function will also output a MOnorm folder to the current working directory. This folder will be labeled with the current date and time, so rerunning will not overwrite previous results. The MOnorm folder will contain visualizations of the omics layers provided including boxplots, PCA, scree, and MDS plots. 
+Running import_MO() will save a data list named “data_list” to the global environment. The elements of this list are composed of the omics layers provided and will be used automatically as the input for integrateMO(). If the normalization option is set to “TRUE” this function will also output a MOnorm folder to the current working directory. This folder will be labeled with the current date and time, so rerunning will not overwrite previous results. The MOnorm folder will contain visualizations of the omics layers provided including boxplots, PCA, scree, and MDS plots. 
 
 ## Normalization 
 The following steps are executed if norm = TRUE
 ### RNAseq counts
 Features with low counts are removed with the filterByExpr() function in edgeR. Log2 counts per million adjusted for library size are calculated and saved for integration. Library size is normalized using the trimmed means of m-values method via calcNormFactors() in edgeR. Counts are extracted using cpm(x, log = TRUE, normalized.lib.sizes = TRUE).
 If batch correction is indicated with batch = “rnaseq_counts” correction is carried out with ComBat() from the sva package.
+
+Links & reference 
+Ritchie, M. E., Phipson, B., Wu, D. I., Hu, Y., Law, C. W., Shi, W., & Smyth, G. K. (2015). limma powers differential expression analyses for RNA-sequencing and microarray studies. Nucleic acids research, 43(7), e47-e47.
+Leek, J. T., Johnson, W. E., Parker, H. S., Fertig, E. J., Jaffe, A. E., Storey, J. D., ... & Torres, L. C. (2019). sva: Surrogate variable analysis. R package version, 3(0), 882-883.
+
 ### Metabolite sum peak area
 Metabolite feature processing was chosen to match standard protocol already in use within EPA. Feature values are first multiplied by 1000, this is done so results match those of metaboanalyst, which is commonly used within EPA. Then rows are mean centered and values are pareto scaled using pareto_scale() from the IMIFA package.
+
+links & reference
+Murphy, K., Viroli, C., & Gormley, I. C. (2020). Infinite mixtures of infinite factor analysers.
 
 ### miRNA and piRNA
 There is currently no normalization procedure carried out by import_MO() for these data types. MIB has yet to measure these data types in a multi-omics study and they may be added or removed in future versions of this package.
 
 ### RRBS M-values
-These features do not require normalization. To generate M-values from RRBS Bismark files see the formatRRBS package.
+These features do not require normalization. To generate M-values from RRBS Bismark files see the formatRRBS package https://github.com/omtorano/formatRRBS.
 
-# Integrate
-integrate_MO() has two parameter inputs
+# Step 2: Integrate data with integrate_MO()
+After running import_MO() the imported omics data sets will automatically be detected by integrate_MO(). integrate_MO() therefore has only two parameter inputs. Integration method allows users to select the data integration method to be used, see "integration method" section. The second optional parameter allows users to specify the path to RRBS feature map input.
 
 - int_method: sPLS-DA, MOFA2, WGCNA, SNF, or iPCA
 - RRBS_feature_map: dataframe of RRBS features to genes, must match format of Unique_Features_to_Genes.csv from formatRRBS output
 
 Example usage
 ```
-integrate_MO(int_method = "SNF") #default RRBS_feature_map = NA
+integrate_MO(int_method = "WGCNA") #default RRBS_feature_map = NA
 integrate_MO(int_method = "sPLS-DA", RRBS_feature_map = ML-0_1000-1000_0.8_Unique_Features_to_Genes) 
 ```
 
 ## Function output
 Running integrate_MO() will generate a folder in the current working directory with the following naming convention "integrateMO_*integration method*_*year-month-day time*". The contents of the folder depend on the integration method chosen, details below.
 
-## integration method
+## Integration method
 Integration method specifies which package & method will be employed to integrate data. Note that integrate_MO() is a wrapper for the packages described below and appropriate citations to the original packages should be used.
 ### sPLS-DA  
 multiblock sparse partial least squares discriminant anslysis from the mixOmics package (DIABLO N-integration). The steps performed in the integrate_MO() function closely follow those described in the mixOmics vignette linked below.
 Important decision points and outputs:
-- Features from each omic layer are limited to top 10,000 features by median absolute deviation 
+- Features from each omic layer are limited to top 10,000 features by median absolute deviation.
 - The design matrix is determined using mixOmics' "data driven" approach. For each omics group cross comparison, PLS with one component is calculated, the
 cross-correlations between components are averaged and used as the off diagonal values of the design matrix.  
 - The number of components is first set to # of treatments + 1, performance evaluation is done with perf(), folds = number of samples in treatment level
@@ -66,8 +86,9 @@ with minimum replicates, nrepeat = 10, final number of components and distance m
 - The number of variables to select is determined with tune.block.splsda(), folds = 5 and nrepeat = 10. The sequence of numbers tested is c(5:9, seq(10, 50, 5)). The final number
 of variable selected on each component will match the number of rows in the splsda_variables_comp.csv files.
 - The design, number of components, and number of variables to select are saved and input as parameters in the final block.splsda() model. Visualization outputs from final model are weighted average plotIndiv() plots, correlation circle
-plots plotVar(), and clustered image maps cimDiablo() of each component. In tests with tox data sets the number of components in the final model has been <= 4, therefore weighted average and correlation circle plots are created for pairs of
+plots plotVar(), and clustered image maps cimDiablo() of each component. In tests with tox data sets, the number of components in the final model has been <= 4. Therefore weighted average and correlation circle plots are created for pairs of
 components up to ncomp = 4.  
+
 Estimated run time and resourse usage  
 On a 11th Gen Intel(R) Core(TM) i7-1185G7 PC with 4 cores and 8 threads a test run took 3915.49 seconds, 148.90 seconds user CPU time, and 6.11 system CPU time. Saved output from tests is <2MB.
 
