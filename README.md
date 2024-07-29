@@ -37,20 +37,20 @@ The orientation of the omics data matricies does not matter. Samples can be eith
 Running import_MO() will save a data list named “data_list” to the global environment. The elements of this list are composed of the omics layers provided and will be used automatically as the input for integrateMO(). If the normalization option is set to “TRUE” this function will also output a MOnorm folder to the current working directory. This folder will be labeled with the current date and time, so rerunning will not overwrite previous results. The MOnorm folder will contain visualizations of the omics layers provided including boxplots, PCA, scree, and MDS plots. 
 
 ## Normalization 
-The following steps are executed if norm = TRUE
+The following normalization steps are carried out for the given omics layers when norm = TRUE.
 ### RNAseq counts
 Features with low counts are removed with the filterByExpr() function in edgeR. Log2 counts per million adjusted for library size are calculated and saved for integration. Library size is normalized using the trimmed means of m-values method via calcNormFactors() in edgeR. Counts are extracted using cpm(x, log = TRUE, normalized.lib.sizes = TRUE).
 If batch correction is indicated with batch = “rnaseq_counts” correction is carried out with ComBat() from the sva package.
 
-Links & reference 
-Ritchie, M. E., Phipson, B., Wu, D. I., Hu, Y., Law, C. W., Shi, W., & Smyth, G. K. (2015). limma powers differential expression analyses for RNA-sequencing and microarray studies. Nucleic acids research, 43(7), e47-e47.
-Leek, J. T., Johnson, W. E., Parker, H. S., Fertig, E. J., Jaffe, A. E., Storey, J. D., ... & Torres, L. C. (2019). sva: Surrogate variable analysis. R package version, 3(0), 882-883.
+Links & references
+- Robinson MD, McCarthy DJ, Smyth GK (2010). “edgeR: a Bioconductor package for differential expression analysis of digital gene expression data.” Bioinformatics, 26(1), 139-140. doi:10.1093/bioinformatics/btp616.
+- Leek, J. T., Johnson, W. E., Parker, H. S., Fertig, E. J., Jaffe, A. E., Storey, J. D., ... & Torres, L. C. (2019). sva: Surrogate variable analysis. R package version, 3(0), 882-883.
 
 ### Metabolite sum peak area
 Metabolite feature processing was chosen to match standard protocol already in use within EPA. Feature values are first multiplied by 1000, this is done so results match those of metaboanalyst, which is commonly used within EPA. Then rows are mean centered and values are pareto scaled using pareto_scale() from the IMIFA package.
 
-links & reference
-Murphy, K., Viroli, C., & Gormley, I. C. (2020). Infinite mixtures of infinite factor analysers.
+Links & references
+- Murphy, K., Viroli, C., & Gormley, I. C. (2020). Infinite mixtures of infinite factor analysers.
 
 ### miRNA and piRNA
 There is currently no normalization procedure carried out by import_MO() for these data types. MIB has yet to measure these data types in a multi-omics study and they may be added or removed in future versions of this package.
@@ -59,7 +59,7 @@ There is currently no normalization procedure carried out by import_MO() for the
 These features do not require normalization. To generate M-values from RRBS Bismark files see the formatRRBS package https://github.com/omtorano/formatRRBS.
 
 # Step 2: Integrate data with integrate_MO()
-After running import_MO() the imported omics data sets will automatically be detected by integrate_MO(). integrate_MO() therefore has only two parameter inputs. Integration method allows users to select the data integration method to be used, see "integration method" section. The second optional parameter allows users to specify the path to RRBS feature map input.
+After running import_MO() the imported omics data sets will automatically be detected by integrate_MO(). integrate_MO() therefore has only two parameter inputs: int_method (integration method) allows users to select the data integration method to be used, see "integration method" section, and the optional RRBS_feature_map parameter which allows users to specify the path to RRBS feature map input.
 
 - int_method: sPLS-DA, MOFA2, WGCNA, SNF, or iPCA
 - RRBS_feature_map: dataframe of RRBS features to genes, must match format of Unique_Features_to_Genes.csv from formatRRBS output
@@ -76,9 +76,9 @@ Running integrate_MO() will generate a folder in the current working directory w
 ## Integration method
 Integration method specifies which package & method will be employed to integrate data. Note that integrate_MO() is a wrapper for the packages described below and appropriate citations to the original packages should be used.
 ### sPLS-DA  
-multiblock sparse partial least squares discriminant anslysis from the mixOmics package (DIABLO N-integration). The steps performed in the integrate_MO() function closely follow those described in the mixOmics vignette linked below.
+Multiblock sparse partial least squares discriminant anslysis from the mixOmics package (DIABLO N-integration). The steps performed in the integrate_MO() function closely follow those described in the mixOmics vignette linked below.
 Important decision points and outputs:
-- Features from each omic layer are limited to top 10,000 features by median absolute deviation.
+- Features from each omic layer are limited to top 10,000 features ordered by median absolute deviation.
 - The design matrix is determined using mixOmics' "data driven" approach. For each omics group cross comparison, PLS with one component is calculated, the
 cross-correlations between components are averaged and used as the off diagonal values of the design matrix.  
 - The number of components is first set to # of treatments + 1, performance evaluation is done with perf(), folds = number of samples in treatment level
@@ -89,7 +89,7 @@ of variable selected on each component will match the number of rows in the spls
 plots plotVar(), and clustered image maps cimDiablo() of each component. In tests with tox data sets, the number of components in the final model has been <= 4. Therefore weighted average and correlation circle plots are created for pairs of
 components up to ncomp = 4.  
 
-Estimated run time and resourse usage  
+Estimated run time and resourse usage - 
 On a 11th Gen Intel(R) Core(TM) i7-1185G7 PC with 4 cores and 8 threads a test run took 3915.49 seconds, 148.90 seconds user CPU time, and 6.11 system CPU time. Saved output from tests is <2MB.
 
 Links & references
@@ -110,25 +110,27 @@ Links & references
 ### WGCNA
 Weighted gene correlation network analysis from the WGCNA package. The steps performed in the integrate_MO() function are based on the WGCNA tutorial in WGCNAtutorials.
 Note that this method is currently set up for pairwise comparisons between omics layers.    
+
 Steps, important decision points, and output:  
-- If present RRBS features are filtered to top 25% most variable features by median absolute deviation. 
+- If present, RRBS features are filtered to top 25% most variable features ordered by median absolute deviation. 
 - Omics features are separately clustered for viz purposes with 7 different clustering algorithms within the hclust() function, output is saved in hclust_sampleTree file. Information below gathered from https://cicerocq.wordpress.com/wp-content/uploads/2019/05/cluster-analysis_5ed_everitt.pdf Chapter 4 Hierarchical Clustering, Statistics and Data Analysis in Geology Chapter 6 and Unsupervised Methods Allen (slides in resources).
-	- Single aka nearest neighbor, distance between groups is defined as that of the closest pair of individuals. Sensitive to outliers so can be useful in identifying potential outliers.
-	- Complete aka furthest neighbor, distance between two groups is defined as most distant pair of individuals. 
-	- Average - UPGMA unweighted pair-group method using the average approach, distance between two clusters is average of the distance.  between all pairs of individuals that are made up of one individual from each group, in short the average of all pairwise distances.  
-	- Centroid UPGMC unweighted pair-group method using centroid approach, merges clusters with most similar mean vectors.
-	- Median WPGMC weighted pair-group methods using the centroid approach, weights centroids equally to produce new centroid of merged cluster. This avoids clusters with numerous objects dominating cluster with few objects when merged.
-	- Mcquitty WPGMA weighted average linkage. Also weights clusters, points in small clusters weighted more highly than points in large clusters.
+	- Single aka nearest neighbor: distance between groups is defined as that of the closest pair of individuals. Sensitive to outliers so can be useful in identifying potential outliers.
+	- Complete aka furthest neighbor: distance between two groups is defined as most distant pair of individuals. 
+	- Average - UPGMA unweighted pair-group method using the average approach: distance between two clusters is average of the distance.  between all pairs of individuals that are made up of one individual from each group, in short the average of all pairwise distances.  
+	- Centroid UPGMC unweighted pair-group method using centroid approach: merges clusters with most similar mean vectors.
+	- Median WPGMC weighted pair-group methods using the centroid approach: weights centroids equally to produce new centroid of merged cluster. This avoids clusters with numerous objects dominating cluster with few objects when merged.
+	- Mcquitty WPGMA weighted average linkage: also weights clusters, points in small clusters weighted more highly than points in large clusters.
 	- Ward.D2 fusion of clusters is based on the size of error sum-of-square criterion. Similar to centroids method but centroids are weights. Sensitive to outliers.
-- For omic layers with between 100 and 5,000 features modules are determined with moduleEigengenes() and saved to a lowcount_omics_MEs object. For omic layers with >5,000 modules are created with blockwiseModules() and saved to a
+- For omic layers with between 100 and 5,000 features, modules are determined with moduleEigengenes() and saved to a lowcount_omics_MEs object. For omic layers with >5,000 features, modules are created with blockwiseModules() and saved to a
 block_MEs object.
 	- lowcount_omics_MEs: soft thresholding powers tested are c(1:10, seq(from = 12, to = 40, by = 2)), power chosen with pickSoftThreshold(). The power that is chosen will be red in resulting soft_thresholding.svg figure. The
-	minimum module size is set to 1/20 the number of features. Eigengenes are clustered using method = "average". The dissimilarity threshold is set to 0.25, which is used for tree cut height. Uses default pearson unsigned network construction.
+	minimum module size is set to 30 features. Eigengenes are clustered using method = "average". The dissimilarity threshold is set to 0.25, which is used for tree cut height. Uses default pearson unsigned network construction.
 	- block_MEs: same as above, additional options include maxBlockSize = 5000.
 - Output includes hclust_sampleTree.svg showing hierarchical clustering of each omic lyer,
 Module_Eigengenes_heatplot.svg for each omic layer showing the relationship between module eigengenes and samples, Module_Eigengenes.csv contains the eigengene values,
 Module_membership.csv has correlation values of a gene to a module eigengene, Module-module.csv of correlation and p-values show these values for the relationship between
-modules belonging to each omic layer. The drndro.pdf files show module clustering for each omic layer.  
+modules belonging to each omic layer. The dendro_*omic_layer*.pdf files show module clustering for each omic layer.  
+
 Estimated run time and resource usage  
 On a 11th Gen Intel(R) Core(TM) i7-1185G7 PC with 4 cores and 8 threads a test run took 1624.73 seconds, 1535.94 seconds user CPU time, and 66.34 system CPU time. Saved output from tests is <2MB.
 
@@ -157,6 +159,7 @@ If RRBS methylation loci features are being input, the resulting output will hav
 Including the RRBS_feature_map option will include associated genes in .csv output with feature names. If RRBS M-values were formatted with the formatRRBS 
 package, the path to the Unique_Features_to_Genes.csv file should be the input for this parameter. If RRBS M-values were not formatted with the formatRRBS
 package, the input for this parameter must be a .csv of methylation feature loci and associated genes. The format of this spreadsheet must have chromosome locations
-in a column labeled "chrom", location along the chromosome in a column labeled "loc", and a column of associated genes as the fourth column of the spreadsheet. **this can be improved in v2**
+in a column labeled "chrom", location along the chromosome in a column labeled "loc", and a column of associated genes as the fourth column of the spreadsheet.
+
 If formatRRBS was used, "association" of methylation loci and genes is defined as a methylation location falling within the defined base pair window of a given gene. Default parameters for formatRRBS
 define this window as 1000bp, so a methylation location is associted with a gene if its location falls within 1000bp upstream, within the gene body, or within 1000bp downstream of the gene. 

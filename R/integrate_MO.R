@@ -202,11 +202,11 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
         # Call the hierarchical clustering function
         geneTree <- fastcluster::hclust(stats::as.dist(dissTOM), method = "average")
         # Module size too large will result in one module, make it dependent on features
-        minModuleSize <- floor(length(X[[i]]) / 20)
+        #minModuleSize <- floor(length(X[[i]]) / 20) #cannot find a % that works across datasets
         # Module identification using dynamic tree cut:
         dynamicMods <- dynamicTreeCut::cutreeDynamic(dendro = geneTree, distM = dissTOM,
                                             deepSplit = 2, pamRespectsDendro = FALSE,
-                                            minClusterSize = minModuleSize)
+                                            minClusterSize = 30)
         dynamicColors <- WGCNA::labels2colors(dynamicMods)
         # Calculate eigengenes
         MEList <- WGCNA::moduleEigengenes(X[[i]], colors = dynamicColors)
@@ -265,10 +265,10 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
              main = paste("Mean connectivity"))
         graphics::text(sft$fitIndices[, 1], sft$fitIndices[, 5], labels = powers, cex = 0.9, col = color_forplot)
         grDevices::dev.off()
-        minModuleSize <- floor(length(X[[i]]) / 20)
+        #minModuleSize <- floor(length(X[[i]]) / 20) #cannot find a % that works across datasets
         bwnet <- WGCNA::blockwiseModules(X[[i]], maxBlockSize = 5000,
                                          power = power_from_sft, TOMType = "unsigned",
-                                         minModuleSize = minModuleSize,
+                                         minModuleSize = 30,
                                          reassignThreshold = 0, mergeCutHeight = 0.25,
                                          numericLabels = TRUE, saveTOMs = FALSE,
                                          saveTOMFileBase = paste0(i, "_TOM"),
