@@ -141,7 +141,15 @@ Links & references
 - Langfelder P, Horvath S (2008) WGCNA: an R package for weighted correlation network analysis. BMC Bioinformatics 2008, 9:559 (https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-9-559)
 
 ### SNF
-similarity fusion network from SNF
+Similarity fusion network from SNFtool package.
+
+Steps, important decision points, and output:
+- If present, RRBS features are filtered to top 25% most variable features ordered by median absolute deviation. 
+- Parameter settings: Number of nearest neighbors is set to 20 or the number of samples - 1, if fumber of samples is less than 20. The hyperparameter alpha is kept at default recommended 0.5, the iteration parameter T is set to 20. The number of clusters is set to the number of unique treatments in metadata.
+- Pair-wise distances and similarity graphs are calculated for each omic layer with the dist2() and affinityMatirx() functions. These are then fused with SNF() into a unified graph. 
+- Spectral clustering is then performed with spectralClustering() and normalized mutual information (NMI) is calculated to measure clustering results, a value close to 1 indicates good clustering.
+- The values from the unified graph and a heatmap of these values are saved as SNF_cluster.csv and SNF_cluster_heatmap.svg respectively. In addition, a network plot of a subset of the highest values from the unified graph is saved to network_map.svg. NMI information is included in this plot.
+
 Links & references
 - https://www.rdocumentation.org/packages/SNFtool/versions/2.3.1/topics/SNF  
 - https://github.com/cran/SNFtool  

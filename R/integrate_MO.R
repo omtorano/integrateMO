@@ -357,12 +357,14 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
 
   # SNF https://github.com/cran/SNFtool
   if (int_method == "SNF"){
-    # for (i in names(X)){
-    #    X[[i]]<-as.data.frame(t(X[[i]]))
-    #  }
     if (!is.null(X$rrbs_mvals)){
       X$rrbs_mvals <- X$rrbs_mvals[, order(apply(X$rrbs_mvals, 2, mad), decreasing = TRUE)[1:(0.25 * ncol(X$rrbs_mvals))]]
       cat("Limiting rrbs_mvals to top", ncol(X$rrbs_mvals), "most variable using median absolute deviation\n")}
+    #X data are in sample (row) x feature (col) format
+    #for (i in names(X)){
+    #  X[[i]]<-as.data.frame(t(X[[i]]))
+    #}
+
     if (length(meta$sample) < 20){
       K <- length(meta$sample) - 1
     }else{K <- 20}
