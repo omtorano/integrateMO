@@ -388,6 +388,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
     SNFtool::displayClustersWithHeatmap(W, group, ColSideColors = cbind(as.character(TRT_number), as.character(group))) #hack this to be better https://rdrr.io/cran/SNFtool/src/R/displayClustersWithHeatmap.R
     graphics::legend("topleft", legend = unique(group), fill = unique(group), cex = 0.8)
     grDevices::dev.off()
+    utils::write.csv(W, paste0(cdir, "/", "SNF_cluster.csv"))
     #diag(W)=0 #which of these is correct?
     #diag(W)=max(W) #is correct? https://rdrr.io/bioc/CancerSubtypes/src/R/ClusteringMethod.R
     distanceMatrix <- W
