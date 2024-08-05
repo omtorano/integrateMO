@@ -61,7 +61,7 @@ These features do not require normalization. To generate M-values from RRBS Bism
 # Step 2: Integrate data with integrate_MO()
 After running import_MO() the imported omics data sets will automatically be detected by integrate_MO(). integrate_MO() therefore has only two parameter inputs: int_method (integration method) allows users to select the data integration method to be used, see "integration method" section, and the optional RRBS_feature_map parameter which allows users to specify the path to RRBS feature map input.
 
-- int_method: sPLS-DA, MOFA2, WGCNA, SNF, or iPCA
+- int_method: sPLS-DA, WGCNA, SNF
 - RRBS_feature_map: dataframe of RRBS features to genes, must match format of Unique_Features_to_Genes.csv from formatRRBS output
 
 Example usage
@@ -96,16 +96,6 @@ Links & references
 - https://mixomicsteam.github.io/mixOmics-Vignette/id_06.html#id_06:diablo  
 - Rohart, F., Gautier, B., Singh, A., & Lê Cao, K. A. (2017). mixOmics: An R package for ‘omics feature selection and multiple data integration. PLoS computational biology, 13(11), e1005752.  
 - Singh, A., Shannon, C. P., Gautier, B., Rohart, F., Vacher, M., Tebbutt, S. J., & Lê Cao, K. A. (2019). DIABLO: an integrative approach for identifying key molecular drivers from multi-omics assays. Bioinformatics, 35(17), 3055-3062.  
-
-### MOFA2
-multi-omic factor analysis from MOFA2
-Links & references
-- https://biofam.github.io/MOFA2/index.html
-- https://raw.githack.com/bioFAM/MOFA2_tutorials/master/R_tutorials/getting_started_R.html  
-- https://raw.githack.com/bioFAM/MOFA2_tutorials/master/R_tutorials/downstream_analysis.html  
-- Argelaguet, R., Velten, B., Arnol, D., Dietrich, S., Zenz, T., Marioni, J. C., ... & Stegle, O. (2018). Multi‐Omics Factor Analysis—a framework for unsupervised integration of multi‐omics data sets. Molecular systems biology, 14(6), e8124.  
-- Argelaguet, R., Arnol, D., Bredikhin, D., Deloro, Y., Velten, B., Marioni, J. C., & Stegle, O. (2020). MOFA+: a statistical framework for comprehensive integration of multi-modal single-cell data. Genome biology, 21(1), 1-17.  
-
 
 ### WGCNA
 Weighted gene correlation network analysis from the WGCNA package. The steps performed in the integrate_MO() function are based on the WGCNA tutorial in WGCNAtutorials.
@@ -157,9 +147,20 @@ Links & references
 
 ### iPCA
 or integrated principal components analysis from iPCA.
+This integration method was investigated and may be incorporated into future versions, but currently the function is outdated and not available as an R package.
 Links & references
 - https://github.com/DataSlingers/iPCA  
 - Tang, T. M., & Allen, G. I. (2021). Integrated principal components analysis. The Journal of Machine Learning Research, 22(1), 8953-9023.
+
+### MOFA2
+multi-omic factor analysis from MOFA2.
+This integration was investigated and may be incorporated into future versions. Currently, the python dependencies required by this package make it difficult to incorporate into an automated R workflow.
+Links & references
+- https://biofam.github.io/MOFA2/index.html
+- https://raw.githack.com/bioFAM/MOFA2_tutorials/master/R_tutorials/getting_started_R.html  
+- https://raw.githack.com/bioFAM/MOFA2_tutorials/master/R_tutorials/downstream_analysis.html  
+- Argelaguet, R., Velten, B., Arnol, D., Dietrich, S., Zenz, T., Marioni, J. C., ... & Stegle, O. (2018). Multi‐Omics Factor Analysis—a framework for unsupervised integration of multi‐omics data sets. Molecular systems biology, 14(6), e8124.  
+- Argelaguet, R., Arnol, D., Bredikhin, D., Deloro, Y., Velten, B., Marioni, J. C., & Stegle, O. (2020). MOFA+: a statistical framework for comprehensive integration of multi-modal single-cell data. Genome biology, 21(1), 1-17.  
 
 
 ## RRBS_feature_map

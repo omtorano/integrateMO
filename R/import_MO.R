@@ -107,7 +107,7 @@ import_MO <- function(rnaseq_counts = NULL,
       plot(pr$x[, 1], pr$x[, 2], col = TRTColor, main = 'RNAseq norm principal components 1 & 2', pch = 16, cex = 1.5,
            xlab = paste0("Principal Component 1 %", round(proportion_variance[1], 2)),
            ylab = paste0("Principal Component 2 %", round(proportion_variance[2], 2)))
-      graphics::legend('topright', inset = c(-grDevices::dev.size()[1] * 0.012, 0),legend = unique(y$samples$group), fill = unique(TRTColor),
+      graphics::legend('topright', inset = c(-grDevices::dev.size()[1] * 0.012, 0), legend = unique(y$samples$group), fill = unique(TRTColor),
              bg = "transparent", bty = "n", title = "Treatment")
       grDevices::dev.off()
       svglite::svglite(file = paste0(cdir, "/", "rnaseq_norm_PCA2.svg"))
@@ -115,7 +115,7 @@ import_MO <- function(rnaseq_counts = NULL,
       plot(pr$x[, 3], pr$x[, 4], col = TRTColor, main = 'RNAseq norm principal components 3 & 4', pch = 16, cex = 1.5,
           xlab = paste0("Principal Component 3 %", round(proportion_variance[3], 2)),
           ylab = paste0("Principal Component 4 %", round(proportion_variance[4], 2)))
-      graphics::legend('topright', inset = c(-grDevices::dev.size()[1] * 0.012, 0),legend = unique(y$samples$group), fill = unique(TRTColor),
+      graphics::legend('topright', inset = c(-grDevices::dev.size()[1] * 0.012, 0), legend = unique(y$samples$group), fill = unique(TRTColor),
              bg = "transparent", bty = "n", title = "Treatment")
       grDevices::dev.off()
       #scree plot

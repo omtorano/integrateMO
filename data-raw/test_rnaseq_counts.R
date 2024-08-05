@@ -25,7 +25,7 @@ test_rnaseq_counts <- liver_counts
 genes_to_include <- read.csv("C:/Users/otorano/OneDrive - Environmental Protection Agency (EPA)/Profile/Documents/EE2/integrateMO_WGCNA_2023-11-03 15.10.28/Module_membership_rnaseq_counts.csv",
                              row.names = 1)
 keep <- rownames(genes_to_include[order(genes_to_include$MEcyan, genes_to_include$MEgreenyellow,
-                                        decreasing = TRUE), ])[1:10000]
+                                        decreasing = TRUE), ])[1:500]
 test_rnaseq_counts <- liver_counts[keep, ]
 saveRDS(test_rnaseq_counts, "data-raw/test_rnaseq_counts.RDS")
 usethis::use_data(test_rnaseq_counts, overwrite = TRUE)

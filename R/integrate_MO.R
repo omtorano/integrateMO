@@ -1,12 +1,12 @@
 #' Multi-omics integration for toxicology data
 #'
-#' @param int_method sPLS-DA, MOFA2, WGCNA, SNF, or iPCA
+#' @param int_method sPLS-DA, WGCNA, SNF
 #' @param RRBS_feature_map dataframe of RRBS features to genes, must match format of Unique_Features_to_Genes.csv from formatRRBS output
 #'
 #' @return output
 #' @importFrom WGCNA cor
 #' @export
-integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA"), RRBS_feature_map = NULL){
+integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature_map = NULL){
 
   #stop if metadata not provided
   if (is.null(meta)) stop("No metadata provided, run import function")
@@ -34,6 +34,9 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
     UF2G <- utils::read.csv(RRBS_feature_map)
     UF2G$id <- paste(UF2G$chrom, UF2G$loc, sep = "-")
   }
+
+  ###The following could be split into separate internal functions. Not doing this in V1 because 1) this works just fine and 2) looking into
+  ###code is easier for users when it is all within the main function.
 
   ## mixOmics
 
@@ -216,7 +219,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
         # Cluster module eigengenes
         METree <- fastcluster::hclust(stats::as.dist(MEDiss), method = "average")
         # Plot the result
-        svglite::svglite(file = paste0(cdir, "/", "module_eigengene_clustering_cutoff_"), i)
+        svglite::svglite(file = paste0(cdir, "/", "Module_Eigengene_clustering_cutoff_", i, ".svg"))
         plot(METree, main = paste("Clustering of", i, "module eigengenes"),
              xlab = "", sub = "")
         MEDissThres <- 0.25
@@ -229,7 +232,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
         mergedColors <- merge$colors
         # Eigengenes of the new merged modules:
         mergedMEs <- merge$newMEs
-        svglite::svglite(file = paste0(cdir, "/", "dendrogram_", i))
+        svglite::svglite(file = paste0(cdir, "/", "dendrogram_", i, ".svg"))
         WGCNA::plotDendroAndColors(geneTree, cbind(dynamicColors, mergedColors),
                                     c("Dynamic Tree Cut", "Merged dynamic"),
                                     dendroLabels = FALSE, hang = 0.03,
@@ -238,8 +241,8 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
         lowcount_omics_MEs[[i]] <- WGCNA::moduleEigengenes(X[[i]], mergedColors)$eigengenes
         utils::write.csv(lowcount_omics_MEs[[i]], paste0(cdir, "/", "Module_Eigengenes_", i, ".csv"))
         svglite::svglite(file = paste0(cdir, "/", paste0("Module_Eigengenes_heatplot_", i, ".svg")))
-        stats::heatmap(as.matrix(lowcount_omics_MEs[[i]]), main = paste0("Module Eigengenes", i),
-                       margins = c(8, 8))
+        stats::heatmap(as.matrix(lowcount_omics_MEs[[i]]), main = paste("Module Eigengenes", i),
+                       margins = c(8, 8), cexCol = 0.8)
         grDevices::dev.off()
       }else{
         # Module detection one step - for high feature count omic layers
@@ -258,7 +261,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
              xlab = "Soft Threshold (power)", ylab = "Scale Free Topology Model Fit, signed R^2", type = "n",
              main = paste("Scale independence"))
         graphics::text(sft$fitIndices[, 1], -sign(sft$fitIndices[, 3]) * sft$fitIndices[, 2],
-             labels = powers, cex = .9, col = color_forplot)
+             labels = powers, cex = 0.9, col = color_forplot)
         # Mean connectivity as a function of the soft-thresholding power
         plot(sft$fitIndices[, 1], sft$fitIndices[, 5],
              xlab = "Soft Threshold (power)", ylab = "Mean Connectivity", type = "n",
@@ -298,7 +301,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
         svglite::svglite(file = paste0(cdir, "/", paste0("Module_Eigengenes_heatplot_", i, ".svg")))
         graphics::par(cex.main = 1)
         stats::heatmap(as.matrix(block_MEs[[i]]), main = paste("Module Eigengenes", i),
-                margins = c(8, 8))
+                margins = c(8, 8), cexCol = 0.8)
         grDevices::dev.off()
 
       }
@@ -315,8 +318,8 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
       textMatrix <- paste0(signif(moduleTraitCor, 2), "\n(",
                     signif(moduleTraitPvalue, 1), ")")
       dim(textMatrix) <- dim(moduleTraitCor)
-      pdf_name <- paste(names(X)[MEs_combo[v, 1]], names(X)[MEs_combo[v, 2]], "module_relationship.svg", sep = "_")
-      svglite::svglite(file = paste0(cdir, "/", pdf_name))
+      image_name <- paste(names(X)[MEs_combo[v, 1]], names(X)[MEs_combo[v, 2]], "Module_Relationship.svg", sep = "_")
+      svglite::svglite(file = paste0(cdir, "/", image_name))
       # Display the correlation values within a heatmap plot
       graphics::par(mar = c(7, 7, 2, 2))
       WGCNA::labeledHeatmap(Matrix = moduleTraitCor,
@@ -330,7 +333,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
                             setStdMargins = FALSE,
                             cex.text = 0.5,
                             zlim = c(-1, 1),
-                            main = paste0("y =", names(X)[MEs_combo[v, 1]], "x =", names(X)[MEs_combo[v, 2]], "/nModule-module relationships"))
+                            main = paste0("y=", names(X)[MEs_combo[v, 1]], " ", "x=", names(X)[MEs_combo[v, 2]], "/nModule-module relationships"))
       grDevices::dev.off()
 
       # Write correlation and p-values of module to module relationships
@@ -376,6 +379,10 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
     for (i in names(X)){
       distance <- SNFtool::dist2(as.matrix((X[[i]])), as.matrix((X[[i]])))
       W_temp[[i]] <- SNFtool::affinityMatrix(distance, K, alpha)
+      svglite::svglite(file = paste0(cdir, "/" , "SimilarityNetwork_", i, "_cluster_heatmap.svg"))
+      SNFtool::displayClustersWithHeatmap(W_temp[[i]], SNFtool::spectralClustering(W_temp[[i]], clusterNum), ColSideColors = as.character(SNFtool::spectralClustering(W_temp[[i]], clusterNum))) #hack this to be better https://rdrr.io/cran/SNFtool/src/R/displayClustersWithHeatmap.R
+      grDevices::dev.off()
+      utils::write.csv(W_temp[[i]], paste0(cdir, "/", "SimilarityNetwork", i, "_cluster.csv"))
     }
     W <- SNFtool::SNF(W_temp, K = K, t = t)
     group <- SNFtool::spectralClustering(W, clusterNum)
@@ -384,11 +391,11 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
       j <- unique(group)[i]
       TRT_number <- gsub(unique(meta$TRT)[i], j, TRT_number)
     }
-    svglite::svglite(file = paste0(cdir, "/" , "SNF_cluster_heatmap.svg"))
+    svglite::svglite(file = paste0(cdir, "/" , "SimilarityNetwork_merged_cluster_heatmap.svg"))
     SNFtool::displayClustersWithHeatmap(W, group, ColSideColors = cbind(as.character(TRT_number), as.character(group))) #hack this to be better https://rdrr.io/cran/SNFtool/src/R/displayClustersWithHeatmap.R
     graphics::legend("topleft", legend = unique(group), fill = unique(group), cex = 0.8)
     grDevices::dev.off()
-    utils::write.csv(W, paste0(cdir, "/", "SNF_cluster.csv"))
+    utils::write.csv(W, paste0(cdir, "/", "SimilarityNetwork_merged_cluster.csv"))
     #diag(W)=0 #which of these is correct?
     #diag(W)=max(W) #is correct? https://rdrr.io/bioc/CancerSubtypes/src/R/ClusteringMethod.R
     distanceMatrix <- W
@@ -415,6 +422,11 @@ integrate_MO <- function(int_method = c("sPLS-DA", "MOFA", "WGCNA", "SNF", "iPCA
 
   }
   if (int_method == "MOFA2"){
-
+    print("not available in this version")
   }
+
+  if (int_method == "iPCA"){
+    print("not available in this version")
+  }
+
 }

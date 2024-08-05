@@ -24,7 +24,7 @@ liver_rrbs <- liver_rrbs[, match(liver_meta$sample, colnames(liver_rrbs))]
 rrbs_to_include <- read.csv("C:/Users/otorano/OneDrive - Environmental Protection Agency (EPA)/Profile/Documents/EE2/integrateMO_WGCNA_2023-11-03 15.10.28/Module_membership_rrbs_mvals.csv",
                             row.names = 1)
 keep <- rownames(rrbs_to_include[order(rrbs_to_include$MEblue, rrbs_to_include$MEcyan,
-                                       rrbs_to_include$MEtan, decreasing = TRUE), ])[1:10000]
+                                       rrbs_to_include$MEtan, decreasing = TRUE), ])[1:5000]
 test_rrbs_mvals <- liver_rrbs[keep, ]
 saveRDS(test_rrbs_mvals, "data-raw/test_rrbs_mvals.RDS")
 usethis::use_data(test_rrbs_mvals, overwrite = TRUE)
