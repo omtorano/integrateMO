@@ -59,7 +59,7 @@ There is currently no normalization procedure carried out by import_MO() for the
 These features do not require normalization. To generate M-values from RRBS Bismark files see the formatRRBS package https://github.com/omtorano/formatRRBS.
 
 # Step 2: Integrate data with integrate_MO()
-After running import_MO() the imported omics data sets will automatically be detected by integrate_MO(). integrate_MO() therefore has only two parameter inputs: int_method (integration method) allows users to select the data integration method to be used, see "integration method" section, and the optional RRBS_feature_map parameter which allows users to specify the path to RRBS feature map input.
+After running import_MO() the imported omics data sets will automatically be detected by integrate_MO(). integrate_MO() therefore has only two parameter inputs: int_method (integration method) allows users to select the data integration method to be used, see "integration method" section, and the optional RRBS_feature_map parameter which allows users to input a feature map object saved within their environment. Note that the input for this paramater should be a data frame saved to the local environment, not the path to RRBS feature map input.
 
 - int_method: sPLS-DA, WGCNA, SNF
 - RRBS_feature_map: dataframe of RRBS features to genes, must match format of Unique_Features_to_Genes.csv from formatRRBS output

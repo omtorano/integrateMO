@@ -31,7 +31,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
   ## Prepare Unique_Features_to_Genes for RRBS
 
   if (!is.null(RRBS_feature_map)){
-    UF2G <- utils::read.csv(RRBS_feature_map)
+    UF2G <- RRBS_feature_map
     UF2G$id <- paste(UF2G$chrom, UF2G$loc, sep = "-")
   }
 
