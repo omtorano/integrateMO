@@ -7,7 +7,7 @@
 \format{
 \subsection{\code{test_rnaseq_counts}}{
 
-A data frame of raw RNAseq counts with 10,000 gene features (rows) and 56 samples (columns).
+A data frame of raw RNAseq counts with 500 gene features (rows) and 56 samples (columns).
 }
 }
 \usage{

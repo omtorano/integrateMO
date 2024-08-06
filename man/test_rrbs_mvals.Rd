@@ -7,7 +7,7 @@
 \format{
 \subsection{\code{test_rrbs_mvals}}{
 
-A data frame of RRBS M Values with 10,000 feautres (rows) and 56 samples (columns)
+A data frame of RRBS M Values with 5,000 feautres (rows) and 56 samples (columns)
 }
 }
 \usage{
