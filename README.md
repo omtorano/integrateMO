@@ -6,9 +6,10 @@ This is a wrapper package to normalize and integrate common omics data types col
 "wrapper package" means that algoriths used to integrate data employed within integrate_MO() come from other packages. These statistical methods were developed by other groups and deployed within R packages/scripts. integrateMO is a package developed to streamline the use of these disperate methods for omics data collected on toxicological exposure data. Using integrateMO means you're actually using one of the "wrapped" packages and citations should be made accordingly, see "References & links for information on integration methods".
 
 # Install importMO & associated packages
-Most packages will be installed within the installation of integrateMO. Several packages must be installed seperately which can be accomplished by running install_run.R. The following code can be run to install integrateMO from github.
+Most packages will be installed within the installation of integrateMO. Several packages must be installed seperately which can be accomplished by running install_run.R. The following code can be run to install integrateMO from github. If install_github() does not work you may need to install git https://git-scm.com/downloads.
 ```
 # Install the package from GitHub & add to library
+install.packages("devtools")
 devtools::install_github("omtorano/integrateMO")
 library(integrateMO)
 ```
