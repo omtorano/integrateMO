@@ -65,7 +65,7 @@ import_MO <- function(rnaseq_counts = NULL,
     #RNAseq
     if(!is.null(data_list$rnaseq_counts)) {
       print("normalizing RNAseq counts with edgeR TMM")
-      svglite::svglite(file = paste0(cdir, "/", "rnaseq_norm_filter.svg"))
+      svglite::svglite(file = paste0(cdir, "/", "rnaseq_norm_filter_boxplot.svg"))
       graphics::par(mfrow = c(1, 2))
       # sub-setting %20 of rows for plots
       select_rows <- sample(nrow(data_list$rnaseq_counts), length(rownames(data_list$rnaseq_counts)) * .2)
@@ -139,7 +139,7 @@ import_MO <- function(rnaseq_counts = NULL,
     if(!is.null(data_list$metab_peaks)) {
       print("normalizing metabolite sum peak area with mean centering and pareto scaling")
       data_list$metab_peaks <- data_list$metab_peaks[rowSums(data_list$metab_peaks) > 0, ]
-      svglite::svglite(file = paste0(cdir, "/" , "metab_impute_norm_filter.svg"))
+      svglite::svglite(file = paste0(cdir, "/" , "metab_impute_norm_filter_boxplot.svg"))
       graphics::par(mfrow = c(1, 2))
       graphics::boxplot(data_list$metab_peaks, main = "Raw values", las = 2, yaxt = "n", cex.axis = .6)
       graphics::axis(2, cex.axis = 1)
@@ -203,7 +203,7 @@ import_MO <- function(rnaseq_counts = NULL,
       #sub-setting %20 of rows for plots
       select_rows <- sample(nrow(data_list$rrbs_mvals), length(rownames(data_list$rrbs_mvals)) * .2)
       suppressWarnings(graphics::boxplot(data_list$rrbs_mvals[select_rows, ],
-                               main = paste("RRBS features =",
+                               main = paste("RRBS features n =",
                                length(data_list$rrbs_mvals[, 1])), las = 2))
       grDevices::dev.off()
       #MDS

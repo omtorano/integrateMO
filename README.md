@@ -1,21 +1,22 @@
 # Overview
 This is a wrapper package to normalize and integrate common omics data types collected during toxicological exposure studies. This package contains two functions: 
+	
 	- import_MO(), see R/import_MO(), for importing data with an option to normalize
 	- integrate_MO(), see R/integrate_MO(), to integrate omics layers
 
-"wrapper package" means that algoriths used to integrate data employed within integrate_MO() come from other packages. These statistical methods were developed by other groups and deployed within R packages/scripts. integrateMO is a package developed to streamline the use of these disperate methods for omics data collected on toxicological exposure data. Using integrateMO means you're actually using one of the "wrapped" packages and citations should be made accordingly, see "References & links for information on integration methods".
+"wrapper package" means that the algoriths used to integrate data employed within integrate_MO() come from other packages. These statistical methods were developed by other groups and deployed within R packages/scripts. integrateMO is a package developed to streamline the use of these disperate methods for omics data collected on toxicological exposure data. Using integrateMO means you're actually using one of the "wrapped" packages and citations should be made accordingly, see "References & links for information on integration methods".
 
-# Install importMO & associated packages
-Most packages will be installed within the installation of integrateMO. Several packages must be installed seperately which can be accomplished by running install_run.R. The following code can be run to install integrateMO from github. If install_github() does not work you may need to install git https://git-scm.com/downloads.
+# Install integrateMO & associated packages
+Most packages will be installed within the installation of integrateMO. Several packages must be installed seperately which can be accomplished by running install_run.R. After running install_run.R the following code can be run to install integrateMO from github. If install_github() does not work you may need to install git https://git-scm.com/downloads.
 ```
-# Install the package from GitHub & add to library
+# After running install_run.R install the package from GitHub & add to library
 install.packages("devtools")
 devtools::install_github("omtorano/integrateMO")
 library(integrateMO)
 ```
 
 # Step 1: Import data with import_MO()
-Step one of the integration workflow is to import omics data & associated metadata with the importMO() function. Within this function data are reformatted and an optional normalization step is executed, see Normalization section for further details. importMO() must be run before integrateMO().
+Step one of the integration workflow is to import omics data & associated metadata with the import_MO() function. A minimum of two omics layers are required. Within this function data are reformatted and an optional normalization step is executed, see #normalization section for further details. import_MO() must be run before integrate_MO().
 
 import_MO() has eight parameter inputs:
 
@@ -28,27 +29,29 @@ import_MO() has eight parameter inputs:
 - norm: Normalization, true or false, default true
 - batch: Omics layers with batches corresponding to "batch_omic" columns in metadata, column labels as follows: batch_rna, batch_metab, batch_rrbs
 
-Example usage
+Example syntax
 ```
-import_MO(rnaseq_counts = counts, rrbs_mvals = mvals, meta = meta) #minimum of 2 omics required, default normalization = TRUE
-import_MO(rnaseq_counts = counts, rrbs_mvals = mvals, metab_peaks = metab, meta = meta, batch = “batch_rna”) #will normalize all three data layers and correct for batch in RNAseq data
+#Example 1: without specificying FALSE default normalization = TRUE
+import_MO(rnaseq_counts = counts, rrbs_mvals = mvals, meta = meta) 
+#Example 2: This will normalize all three data layers and correct for batch in RNAseq data
+import_MO(rnaseq_counts = counts, rrbs_mvals = mvals, metab_peaks = metab, meta = meta, batch = “batch_rna”)
 ```
-The orientation of the omics data matricies does not matter. Samples can be either row names or column names and features can be row names or column names. Sample names must be either row or column names (i.e. not the first row or first column) and must match the row names of the metadata.
+The row x column orientation of the omics data matricies does not matter. Samples can be either row names or column names and features can be row names or column names. Sample names must be either row or column names (i.e. not the first row or first column) and must match the row names of the metadata.
 ## Function output
-Running import_MO() will save a data list named “data_list” to the global environment. The elements of this list are composed of the omics layers provided and will be used automatically as the input for integrateMO(). If the normalization option is set to “TRUE” this function will also output a MOnorm folder to the current working directory. This folder will be labeled with the current date and time, so rerunning will not overwrite previous results. The MOnorm folder will contain visualizations of the omics layers provided including boxplots, PCA, scree, and MDS plots. 
+Running import_MO() will save a data list named “data_list” to the global environment. The elements of this list are composed of the omics layers provided and will be used automatically as the input for integrate_MO(). For this reason importMO() is a required precursor to integtrateMO(). If the normalization option is set to “TRUE” this function will also output a folder called MOnorm to the current working directory. This folder will be labeled with the current date and time, so rerunning will not overwrite previous results. The MOnorm folder will contain visualizations of the omics layers provided including boxplots, PCA, scree, and MDS plots. 
 
 ## Normalization 
 The following normalization steps are carried out for the given omics layers when norm = TRUE.
 ### RNAseq counts
 Features with low counts are removed with the filterByExpr() function in edgeR. Log2 counts per million adjusted for library size are calculated and saved for integration. Library size is normalized using the trimmed means of m-values method via calcNormFactors() in edgeR. Counts are extracted using cpm(x, log = TRUE, normalized.lib.sizes = TRUE).
-If batch correction is indicated with batch = “rnaseq_counts” correction is carried out with ComBat() from the sva package.
+If batch correction is indicated with *batch = “rnaseq_counts”* correction is carried out with ComBat() from the sva package.
 
 Links & references
 - Robinson MD, McCarthy DJ, Smyth GK (2010). “edgeR: a Bioconductor package for differential expression analysis of digital gene expression data.” Bioinformatics, 26(1), 139-140. doi:10.1093/bioinformatics/btp616.
 - Leek, J. T., Johnson, W. E., Parker, H. S., Fertig, E. J., Jaffe, A. E., Storey, J. D., ... & Torres, L. C. (2019). sva: Surrogate variable analysis. R package version, 3(0), 882-883.
 
 ### Metabolite sum peak area
-Metabolite feature processing was chosen to match standard protocol already in use within EPA. Feature values are first multiplied by 1000, this is done so results match those of metaboanalyst, which is commonly used within EPA. Then rows are mean centered and values are pareto scaled using pareto_scale() from the IMIFA package.
+Metabolite feature processing was chosen to match standard protocol already used within EPA. Feature values are first multiplied by 1000, this is done so results match those of metaboanalyst, which is commonly used within EPA. Then rows are mean centered and values are pareto scaled using pareto_scale() from the IMIFA package.
 
 Links & references
 - Murphy, K., Viroli, C., & Gormley, I. C. (2020). Infinite mixtures of infinite factor analysers.
@@ -60,14 +63,16 @@ There is currently no normalization procedure carried out by import_MO() for the
 These features do not require normalization. To generate M-values from RRBS Bismark files see the formatRRBS package https://github.com/omtorano/formatRRBS.
 
 # Step 2: Integrate data with integrate_MO()
-After running import_MO() the imported omics data sets will automatically be detected by integrate_MO(). integrate_MO() therefore has only two parameter inputs: int_method (integration method) allows users to select the data integration method to be used, see "integration method" section, and the optional RRBS_feature_map parameter which allows users to input a feature map object saved within their environment. Note that the input for this paramater should be a data frame saved to the local environment, not the path to RRBS feature map input.
+After running import_MO() the imported omics data sets will automatically be detected by integrate_MO(). integrate_MO() therefore has only two parameter inputs: 
 
-- int_method: sPLS-DA, WGCNA, SNF
-- RRBS_feature_map: dataframe of RRBS features to genes, must match format of Unique_Features_to_Genes.csv from formatRRBS output
+- int_method: Allows users to select the data integration to be used. Options are sPLS-DA, WGCNA, SNF
+- RRBS_feature_map: Optional, default = NA. Allows users to input a feature map object saved in global environment. Must be dataframe of RRBS features to genes, must match format of Unique_Features_to_Genes.csv from formatRRBS output. Note that the input for this paramater should be a data frame saved to the local environment, not the path to RRBS feature map input.
 
-Example usage
+Example syntax
 ```
-integrate_MO(int_method = "WGCNA") #default RRBS_feature_map = NA
+#Example 1: using WGCNA integration method, default RRBS_feature_map = NA
+integrate_MO(int_method = "WGCNA")
+#Example 2: using mixOmics DIABLO sPLS-DA integration method and specifying map object
 integrate_MO(int_method = "sPLS-DA", RRBS_feature_map = ML-0_1000-1000_0.8_Unique_Features_to_Genes) 
 ```
 
@@ -148,7 +153,8 @@ Links & references
 
 ### iPCA
 or integrated principal components analysis from iPCA.
-This integration method was investigated and may be incorporated into future versions, but currently the function is outdated and not available as an R package.
+This integration method was investigated and may be incorporated into future versions, but currently the iPCA function is outdated and not available as an R package.
+
 Links & references
 - https://github.com/DataSlingers/iPCA  
 - Tang, T. M., & Allen, G. I. (2021). Integrated principal components analysis. The Journal of Machine Learning Research, 22(1), 8953-9023.
@@ -156,6 +162,7 @@ Links & references
 ### MOFA2
 multi-omic factor analysis from MOFA2.
 This integration was investigated and may be incorporated into future versions. Currently, the python dependencies required by this package make it difficult to incorporate into an automated R workflow.
+
 Links & references
 - https://biofam.github.io/MOFA2/index.html
 - https://raw.githack.com/bioFAM/MOFA2_tutorials/master/R_tutorials/getting_started_R.html  
@@ -165,11 +172,31 @@ Links & references
 
 
 ## RRBS_feature_map
-If RRBS methylation loci features are being input, the resulting output will have the "chromosome-location" format for any output with feature names. 
-Including the RRBS_feature_map option will include associated genes in .csv output with feature names. If RRBS M-values were formatted with the formatRRBS 
-package, the path to the Unique_Features_to_Genes.csv file should be the input for this parameter. If RRBS M-values were not formatted with the formatRRBS
-package, the input for this parameter must be a .csv of methylation feature loci and associated genes. The format of this spreadsheet must have chromosome locations
+An RRBS feature map allows the mapping of methylation loci to chromosome loci. With the inclusion of a feature map along with RRBS methylation loci feature layer, the resulting integration output (tables, plots) will have the "chromosome-location" format for any output with RRBS feature names. 
+The RRBS_feature_map object must exist in the R environment. If RRBS M-values were formatted with the formatRRBS 
+package, users should use the Unique_Features_to_Genes.csv file for this parameter. If RRBS M-values were not formatted with the formatRRBS
+package, the input for this parameter must be a data frame of methylation feature loci and associated genes. The data frame must have chromosome locations
 in a column labeled "chrom", location along the chromosome in a column labeled "loc", and a column of associated genes as the fourth column of the spreadsheet.
 
 If formatRRBS was used, "association" of methylation loci and genes is defined as a methylation location falling within the defined base pair window of a given gene. Default parameters for formatRRBS
 define this window as 1000bp, so a methylation location is associted with a gene if its location falls within 1000bp upstream, within the gene body, or within 1000bp downstream of the gene. 
+
+# Example usage with built in test data
+integrateMO contains a test data set containing RNAseq and RRBS omics layers that can be used for package testing. These data are a subset of a larger dataset collected during a 2022 fathead minnow chemixal exposure experiment exploring the biological effects of EE2 on male and female fish. The test data contain 56 samples with the 
+following naming convention *sex(M/F)*-*treatment level(0-10)*-*sample number*. Sample ML-2.5-49 describes a male fish in treatment group 2.5 with a sample number of 49. There are three treatment groups, 0 indicating no treatment, 2.5 indicating second highest dose level, and 10 indicating highest dose level. The chemical of interest in this
+experiment has estrogenic effects, therefore female fish are included for comparison but were not exposed. In the data female samples are marked FL-0-*sample number*.
+ 
+Below is example code to import and integrate test data with WGCNA.
+```
+devtools::install_github("https://github.com/omtorano/integrateMO/tree/master")
+library(integrateMO)
+import_MO(rnaseq_counts = test_rnaseq_counts, rrbs_mvals = test_rrbs_mvals, meta = test_meta )
+integrate_MO(int_method = "WGCNA", RRBS_feature_map = test_RRBS_feature_map)
+```
+After running the above code a folder called MOnorm_*date time* will be output to the current working directory containing 7 plots. Generally the plots generated 
+in this step are aimed at giving the user a full understanding of the data being input for integration. The output should also be used to check for unexpected package behavior or data quality issues. 
+
+- rnaseq_norm_filter_boxplot - boxplots of raw and normalized RNAseq counts, n = number of features before and after low count filtering.
+- rnaseq_norm_PCA1, PCA2, scree - plots of PC1vPC2 and PC2vPC4 as well as a scree plot of normalized RNAseq data
+- rnaseq_norm_PCoA_MDS - similar to PCA plots but allows for different features to be used to distinguish pairs of treatment groups. Useful if "different molecular pathways are relevant for distinguishing different pairs of samples" See limma:plotMDS documentation and Ritchie ME, Phipson B, Wu D, Hu Y, Law CW, Shi W, and Smyth GK (2015). limma powers differential expression analyses for RNA-sequencing and microarray studies. Nucleic Acids Research 43, e47. http://nar.oxfordjournals.org/content/43/7/e47
+- rrbs_boxplot - boxplot of RRBS M-values, n = number of features
