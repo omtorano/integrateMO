@@ -243,7 +243,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
         lowcount_omics_MEs[[i]] <- WGCNA::moduleEigengenes(X[[i]], mergedColors)$eigengenes
         modassignment[[i]] <- WGCNA::moduleEigengenes(X[[i]], mergedColors)$validColors
         utils::write.table(lowcount_omics_MEs[[i]], paste0(cdir, "/", paste0(i, "_output"), "/", "Module_Eigengenes_", i, ".txt"))
-        svglite::svglite(file = paste0(cdir, "/", paste0("Module_Eigengenes_avgExp_heatplot_", i, ".svg")))
+        svglite::svglite(file = paste0(cdir, "/", paste0(i, "_output"), "/", paste0("Module_Eigengenes_avgExp_heatplot_", i, ".svg")))
         stats::heatmap(as.matrix(WGCNA::moduleEigengenes(X[[i]], mergedColors)$averageExpr), main = paste("Normalized module feature values", i),
                        margins = c(8, 8), cexCol = 0.8)
         varExplained <- WGCNA::moduleEigengenes(X[[i]], mergedColors)$varExplained
@@ -320,7 +320,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
         grDevices::dev.off()
         block_MEs[[i]] <- WGCNA::moduleEigengenes(X[[i]], bwModuleColors)$eigengenes
         modassignment[[i]] <- WGCNA::moduleEigengenes(X[[i]], bwModuleColors)$validColors
-        utils::write.table(block_MEs[[i]], paste0(cdir, "/", "Module_Eigengenes_", i, ".txt"))
+        utils::write.table(block_MEs[[i]], paste0(cdir, "/", paste0(i, "_output"), "/", "Module_Eigengenes_", i, ".txt"))
         svglite::svglite(file = paste0(cdir, "/", paste0(i, "_output"), "/", paste0("Module_Eigengenes_avgExp_heatplot_", i, ".svg")))
         stats::heatmap(as.matrix(WGCNA::moduleEigengenes(X[[i]], bwModuleColors)$averageExpr), main = paste("Normalized module feature values", i),
                        margins = c(8, 8), cexCol = 0.8)
