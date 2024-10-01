@@ -155,7 +155,8 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
     traitColors <- WGCNA::numbers2colors(TRT_number, signed = FALSE)
     # rnaseq counts are already logged
     for (i in names(X)){
-      grDevices::pdf(file = paste0(cdir, "/", "hclust_", i, "_SampleTree.pdf"))
+      dir.create(file.path(cdir, paste0(i, "_output")))
+      grDevices::pdf(file = paste0(cdir, "/", paste0(i, "_output"), "/", "hclust_", i, "_SampleTree.pdf"))
       sampleTree <- fastcluster::hclust(stats::dist(X[[i]]), method = "average")
       #cluster with metadata
       WGCNA::plotDendroAndColors(fastcluster::hclust(stats::dist(X[[i]]), method = "single"), traitColors,
@@ -188,7 +189,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
         power_from_sft <- sft$fitIndices[sft$fitIndices$SFT.R.sq == max(sft$fitIndices$SFT.R.sq[1:10]), 1]
         color_forplot <- rep("black", length(sft$fitIndices$Power))
         color_forplot[power_from_sft] <- "red"
-        svglite::svglite(file = paste0(cdir, "/", "Soft_Threasholding_Power_", i, ".svg"))
+        svglite::svglite(file = paste0(cdir, "/", paste0(i, "_output"), "/", "Soft_Threasholding_Power_", i, ".svg"))
         graphics::par(mfrow = c(1, 2))
         plot(sft$fitIndices[, 1], -sign(sft$fitIndices[, 3]) * sft$fitIndices[, 2],
              xlab = "Soft Threshold (power)", ylab = "Scale Free Topology Model Fit,signed R^2", type = "n",
@@ -220,7 +221,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
         # Cluster module eigengenes
         METree <- fastcluster::hclust(stats::as.dist(MEDiss), method = "average")
         # Plot the result
-        svglite::svglite(file = paste0(cdir, "/", "Clustering_Cutoff_", i, ".svg"))
+        svglite::svglite(file = paste0(cdir, "/", paste0(i, "_output"), "/", "Clustering_Cutoff_", i, ".svg"))
         plot(METree, main = paste("Clustering of", i, "module eigengenes"),
              xlab = "", sub = "")
         MEDissThres <- 0.25
@@ -233,7 +234,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
         mergedColors <- merge$colors
         # Eigengenes of the new merged modules:
         mergedMEs <- merge$newMEs
-        svglite::svglite(file = paste0(cdir, "/", "Cluster_Dendrogram_", i, ".svg"))
+        svglite::svglite(file = paste0(cdir, "/", paste0(i, "_output"), "/", "Cluster_Dendrogram_", i, ".svg"))
         WGCNA::plotDendroAndColors(geneTree, cbind(dynamicColors, mergedColors),
                                     c("Dynamic Tree Cut", "Merged dynamic"),
                                     dendroLabels = FALSE, hang = 0.03,
@@ -241,13 +242,13 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
         grDevices::dev.off()
         lowcount_omics_MEs[[i]] <- WGCNA::moduleEigengenes(X[[i]], mergedColors)$eigengenes
         modassignment[[i]] <- WGCNA::moduleEigengenes(X[[i]], mergedColors)$validColors
-        utils::write.table(lowcount_omics_MEs[[i]], paste0(cdir, "/", "Module_Eigengenes_", i, ".txt"))
+        utils::write.table(lowcount_omics_MEs[[i]], paste0(cdir, "/", paste0(i, "_output"), "/", "Module_Eigengenes_", i, ".txt"))
         svglite::svglite(file = paste0(cdir, "/", paste0("Module_Eigengenes_avgExp_heatplot_", i, ".svg")))
         stats::heatmap(as.matrix(WGCNA::moduleEigengenes(X[[i]], mergedColors)$averageExpr), main = paste("Normalized module feature values", i),
                        margins = c(8, 8), cexCol = 0.8)
         varExplained <- WGCNA::moduleEigengenes(X[[i]], mergedColors)$varExplained
         grDevices::dev.off()
-        svglite::svglite(file = paste0("Module_Eigengenes_pairs_", i, ".svg"))
+        svglite::svglite(file = paste0(cdir, "/", paste0(i, "_output"), "/", paste0("Module_Eigengenes_pairs_", i, ".svg")))
         pairs(lowcount_omics_MEs[[i]][, -grep("grey", colnames(lowcount_omics_MEs[[i]]))],
               col = TRT_number,
               labels = paste(colnames(lowcount_omics_MEs[[i]][, -grep("grey", colnames(lowcount_omics_MEs[[i]]))]),
@@ -258,14 +259,14 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
         grDevices::dev.off()
         # Test extract module membership
         geneModuleMembership <- as.data.frame(WGCNA::cor(X[[i]], WGCNA::orderMEs(lowcount_omics_MEs[[i]]), method = "pearson"))
-        if (i=="rrbs_mvals"){
+        if (i == "rrbs_mvals"){
           if (exists("UF2G")){
             rownames(geneModuleMembership) <- paste(rownames(geneModuleMembership), UF2G[match(rownames(geneModuleMembership), UF2G$id), 4])
           }
         }
         geneModuleMembership <- cbind(geneModuleMembership, modassignment[[i]])
         colnames(geneModuleMembership)[4] <- "module_assignment"
-        utils::write.table(geneModuleMembership, paste0(cdir, "/", "Module_membership_", i, ".txt"))
+        utils::write.table(geneModuleMembership, paste0(cdir, "/", paste0(i, "_output"), "/", "Module_membership_", i, ".txt"))
       }else{
         # Module detection one step - for high feature count omic layers
         # Choose a set of soft-thresholding powers
@@ -275,7 +276,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
         power_from_sft <- sft$fitIndices[sft$fitIndices$SFT.R.sq == max(sft$fitIndices$SFT.R.sq[1:10]), 1]
         color_forplot <- rep("black", length(sft$fitIndices$Power))
         color_forplot[power_from_sft] <- "red"
-        svglite::svglite(file = paste0(cdir, "/", "Soft_Threasholding_Power_", i, ".svg"))
+        svglite::svglite(file = paste0(cdir, "/", paste0(i, "_output"), "/", "Soft_Threasholding_Power_", i, ".svg"))
         graphics::par(mfrow = c(1, 2))
         # Plot the results:
         # Scale-free topology fit index as a function of the soft-thresholding power
@@ -301,7 +302,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
 
         bwLabels <- bwnet$colors
         bwModuleColors <- WGCNA::labels2colors(bwLabels)
-        grDevices::pdf(file = paste0(cdir, "/", "dendro_", i, ".pdf"))
+        grDevices::pdf(file = paste0(cdir, "/", paste0(i, "_output"), "/", "dendro_", i, ".pdf"))
         if (length(bwnet$dendrograms) > 1){
           for (j in 1:length(bwnet$dendrograms)){
             WGCNA::plotDendroAndColors(bwnet$dendrograms[[j]], bwModuleColors[bwnet$blockGenes[[j]]],
@@ -320,12 +321,12 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
         block_MEs[[i]] <- WGCNA::moduleEigengenes(X[[i]], bwModuleColors)$eigengenes
         modassignment[[i]] <- WGCNA::moduleEigengenes(X[[i]], bwModuleColors)$validColors
         utils::write.table(block_MEs[[i]], paste0(cdir, "/", "Module_Eigengenes_", i, ".txt"))
-        svglite::svglite(file = paste0(cdir, "/", paste0("Module_Eigengenes_avgExp_heatplot_", i, ".svg")))
+        svglite::svglite(file = paste0(cdir, "/", paste0(i, "_output"), "/", paste0("Module_Eigengenes_avgExp_heatplot_", i, ".svg")))
         stats::heatmap(as.matrix(WGCNA::moduleEigengenes(X[[i]], bwModuleColors)$averageExpr), main = paste("Normalized module feature values", i),
                        margins = c(8, 8), cexCol = 0.8)
         varExplained <- WGCNA::moduleEigengenes(X[[i]], bwModuleColors)$varExplained
         grDevices::dev.off()
-        svglite::svglite(file = paste0("Module_Eigengenes_pairs_", i, ".svg"))
+        svglite::svglite(file = paste0(cdir, "/", paste0(i, "_output"), "/", paste0("Module_Eigengenes_pairs_", i, ".svg")))
         pairs(block_MEs[[i]][, -grep("grey", colnames(block_MEs[[i]]))],
               col = TRT_number,
               labels = paste(colnames(block_MEs[[i]][, -grep("grey", colnames(block_MEs[[i]]))]),
@@ -336,14 +337,14 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
         grDevices::dev.off()
         # Test extract module membership
         geneModuleMembership <- as.data.frame(WGCNA::cor(X[[i]], WGCNA::orderMEs(block_MEs[[i]]), method = "pearson"))
-        if (i=="rrbs_mvals"){
+        if (i == "rrbs_mvals"){
           if (exists("UF2G")){
             rownames(geneModuleMembership) <- paste(rownames(geneModuleMembership), UF2G[match(rownames(geneModuleMembership), UF2G$id), 4])
           }
         }
         geneModuleMembership <- cbind(geneModuleMembership, modassignment[[i]])
         colnames(geneModuleMembership)[4] <- "module_assignment"
-        utils::write.table(geneModuleMembership, paste0(cdir, "/", "Module_membership_", i, ".txt"))
+        utils::write.table(geneModuleMembership, paste0(cdir, "/", paste0(i, "_output"), "/", "Module_membership_", i, ".txt"))
       }
     }
     # This all needs to be modified for having +2 omic layers
