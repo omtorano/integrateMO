@@ -99,7 +99,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
           values[, 2] <- UF2G[match(rownames(values), UF2G$id), 4]
           colnames(values) <- c("value", "associated_gene")
         }
-      utils::write.csv(values, paste0(cdir, "/", "splsda_variables_comp", i, ".csv"))
+      utils::write.table(values, paste0(cdir, "/", "splsda_variables_comp", i, ".txt"))
     }
 
     if (ncomp > 1){
@@ -239,11 +239,32 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
                                     addGuide = TRUE, guideHang = 0.05)
         grDevices::dev.off()
         lowcount_omics_MEs[[i]] <- WGCNA::moduleEigengenes(X[[i]], mergedColors)$eigengenes
-        utils::write.csv(lowcount_omics_MEs[[i]], paste0(cdir, "/", "Module_Eigengenes_", i, ".csv"))
-        svglite::svglite(file = paste0(cdir, "/", paste0("Module_Eigengenes_heatplot_", i, ".svg")))
-        stats::heatmap(as.matrix(lowcount_omics_MEs[[i]]), main = paste("Module Eigengenes", i),
+        modassignment[[i]] <- WGCNA::moduleEigengenes(X[[i]], mergedColors)$validColors
+        utils::write.table(lowcount_omics_MEs[[i]], paste0(cdir, "/", "Module_Eigengenes_", i, ".txt"))
+        svglite::svglite(file = paste0(cdir, "/", paste0("Module_Eigengenes_avgExp_heatplot_", i, ".svg")))
+        stats::heatmap(as.matrix(WGCNA::moduleEigengenes(X[[i]], mergedColors)$averageExpr), main = paste("Normalized module feature values", i),
                        margins = c(8, 8), cexCol = 0.8)
+        varExplained <- WGCNA::moduleEigengenes(X[[i]], mergedColors)$varExplained
         grDevices::dev.off()
+        svglite::svglite(file = paste0("Module_Eigengenes_pairs_", i, ".svg"))
+        pairs(lowcount_omics_MEs[[i]][, -grep("grey", colnames(lowcount_omics_MEs[[i]]))],
+              col = TRT_number,
+              labels = paste(colnames(lowcount_omics_MEs[[i]][, -grep("grey", colnames(lowcount_omics_MEs[[i]]))]),
+                             paste0("varExplained=", round(varExplained[-grep("grey", colnames(lowcount_omics_MEs[[i]]))], digits = 2)), sep = "\n"),
+              pch = 16, oma = c(3, 3, 3, 15))
+        par(xpd = TRUE)
+        legend("bottomright", fill = unique(TRT_number), legend = unique(meta$TRT), cex = 1)
+        grDevices::dev.off()
+        # Test extract module membership
+        geneModuleMembership <- as.data.frame(WGCNA::cor(X[[i]], WGCNA::orderMEs(lowcount_omics_MEs[[i]]), method = "pearson"))
+        if (i=="rrbs_mvals"){
+          if (exists("UF2G")){
+            rownames(geneModuleMembership) <- paste(rownames(geneModuleMembership), UF2G[match(rownames(geneModuleMembership), UF2G$id), 4])
+          }
+        }
+        geneModuleMembership <- cbind(geneModuleMembership, modassignment[[i]])
+        colnames(geneModuleMembership)[4] <- "module_assignment"
+        utils::write.table(geneModuleMembership, paste0(cdir, "/", "Module_membership_", i, ".txt"))
       }else{
         # Module detection one step - for high feature count omic layers
         # Choose a set of soft-thresholding powers
@@ -296,14 +317,32 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
         }
         grDevices::dev.off()
         block_MEs[[i]] <- WGCNA::moduleEigengenes(X[[i]], bwModuleColors)$eigengenes
-        utils::write.csv(block_MEs[[i]], paste0(cdir, "/", "Module_Eigengenes_", i, ".csv"))
-
-        svglite::svglite(file = paste0(cdir, "/", paste0("Module_Eigengenes_heatplot_", i, ".svg")))
-        graphics::par(cex.main = 1)
-        stats::heatmap(as.matrix(block_MEs[[i]]), main = paste("Module Eigengenes", i),
-                margins = c(8, 8), cexCol = 0.8)
+        modassignment[[i]] <- WGCNA::moduleEigengenes(X[[i]], bwModuleColors)$validColors
+        utils::write.table(block_MEs[[i]], paste0(cdir, "/", "Module_Eigengenes_", i, ".txt"))
+        svglite::svglite(file = paste0(cdir, "/", paste0("Module_Eigengenes_avgExp_heatplot_", i, ".svg")))
+        stats::heatmap(as.matrix(WGCNA::moduleEigengenes(X[[i]], bwModuleColors)$averageExpr), main = paste("Normalized module feature values", i),
+                       margins = c(8, 8), cexCol = 0.8)
+        varExplained <- WGCNA::moduleEigengenes(X[[i]], bwModuleColors)$varExplained
         grDevices::dev.off()
-
+        svglite::svglite(file = paste0("Module_Eigengenes_pairs_", i, ".svg"))
+        pairs(block_MEs[[i]][, -grep("grey", colnames(block_MEs[[i]]))],
+              col = TRT_number,
+              labels = paste(colnames(block_MEs[[i]][, -grep("grey", colnames(block_MEs[[i]]))]),
+                             paste0("varExplained=", round(varExplained[-grep("grey", colnames( block_MEs[[i]]))], digits = 2)), sep = "\n"),
+              pch = 16, oma = c(3, 3, 3, 15))
+        par(xpd = TRUE)
+        legend("bottomright", fill = unique(TRT_number), legend = unique(meta$TRT), cex = 1)
+        grDevices::dev.off()
+        # Test extract module membership
+        geneModuleMembership <- as.data.frame(WGCNA::cor(X[[i]], WGCNA::orderMEs(block_MEs[[i]]), method = "pearson"))
+        if (i=="rrbs_mvals"){
+          if (exists("UF2G")){
+            rownames(geneModuleMembership) <- paste(rownames(geneModuleMembership), UF2G[match(rownames(geneModuleMembership), UF2G$id), 4])
+          }
+        }
+        geneModuleMembership <- cbind(geneModuleMembership, modassignment[[i]])
+        colnames(geneModuleMembership)[4] <- "module_assignment"
+        utils::write.table(geneModuleMembership, paste0(cdir, "/", "Module_membership_", i, ".txt"))
       }
     }
     # This all needs to be modified for having +2 omic layers
@@ -337,25 +376,9 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
       grDevices::dev.off()
 
       # Write correlation and p-values of module to module relationships
-      utils::write.csv(moduleTraitCor, paste0(cdir, "/", "Module-Module_cor.csv"))
-      utils::write.csv(moduleTraitPvalue, paste0(cdir, "/", "Module-Module_pval.csv"))
-
-      # Test extract module membership
-      geneModuleMembership <- as.data.frame(WGCNA::cor(X[[MEs_combo[v, 1]]], WGCNA::orderMEs(all_MEs[[MEs_combo[v, 1]]]), method = "pearson"))
-      if (names(X)[MEs_combo[v, 1]]=="rrbs_mvals"){
-        if (exists("UF2G")){
-          rownames(geneModuleMembership) <- paste(rownames(geneModuleMembership), UF2G[match(rownames(geneModuleMembership), UF2G$id), 4])
-        }
-      }
-      utils::write.csv(geneModuleMembership, paste0(cdir, "/", "Module_membership_", names(X)[MEs_combo[v, 1]], ".csv"))
-      geneModuleMembership2 <- as.data.frame(WGCNA::cor(X[[MEs_combo[v, 2]]], WGCNA::orderMEs(all_MEs[[MEs_combo[v, 2]]]), method = "pearson"))
-      if (names(X)[MEs_combo[v, 2]]=="rrbs_mvals"){
-        if (exists("UF2G")){
-          geneModuleMembership2$MethylationLoci_gene_map <- paste(rownames(geneModuleMembership2), UF2G[match(rownames(geneModuleMembership2), UF2G$id), 4])
-        }
-      }
-      utils::write.csv(geneModuleMembership2, paste0(cdir, "/", "Module_membership_", names(X)[MEs_combo[v, 2]], ".csv"))
-      }
+      utils::write.table(moduleTraitCor, paste0(cdir, "/", "Module-Module_cor.txt"))
+      utils::write.table(moduleTraitPvalue, paste0(cdir, "/", "Module-Module_pval.txt"))
+    }
   }
 
   # SNF https://github.com/cran/SNFtool
@@ -382,7 +405,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
       svglite::svglite(file = paste0(cdir, "/" , "SimilarityNetwork_", i, "_cluster_heatmap.svg"))
       SNFtool::displayClustersWithHeatmap(W_temp[[i]], SNFtool::spectralClustering(W_temp[[i]], clusterNum), ColSideColors = as.character(SNFtool::spectralClustering(W_temp[[i]], clusterNum))) #hack this to be better https://rdrr.io/cran/SNFtool/src/R/displayClustersWithHeatmap.R
       grDevices::dev.off()
-      utils::write.csv(W_temp[[i]], paste0(cdir, "/", "SimilarityNetwork", i, "_cluster.csv"))
+      utils::write.table(W_temp[[i]], paste0(cdir, "/", "SimilarityNetwork", i, "_cluster.txt"))
     }
     W <- SNFtool::SNF(W_temp, K = K, t = t)
     group <- SNFtool::spectralClustering(W, clusterNum)
@@ -395,7 +418,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
     SNFtool::displayClustersWithHeatmap(W, group, ColSideColors = cbind(as.character(TRT_number), as.character(group))) #hack this to be better https://rdrr.io/cran/SNFtool/src/R/displayClustersWithHeatmap.R
     graphics::legend("topleft", legend = unique(group), fill = unique(group), cex = 0.8)
     grDevices::dev.off()
-    utils::write.csv(W, paste0(cdir, "/", "SimilarityNetwork_merged_cluster.csv"))
+    utils::write.table(W, paste0(cdir, "/", "SimilarityNetwork_merged_cluster.txt"))
     #diag(W)=0 #which of these is correct?
     #diag(W)=max(W) #is correct? https://rdrr.io/bioc/CancerSubtypes/src/R/ClusteringMethod.R
     distanceMatrix <- W

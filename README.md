@@ -16,7 +16,7 @@ library(integrateMO)
 ```
 
 # Step 1: Import data with import_MO()
-Step one of the integration workflow is to import omics data & associated metadata with the import_MO() function. A minimum of two omics layers are required. Within this function data are reformatted and an optional normalization step is executed, see #normalization section for further details. import_MO() must be run before integrate_MO().
+Step one of the integration workflow is to import omics data & associated metadata with the import_MO() function. A minimum of two omics layers are required. Within this function data are reformatted and an optional normalization step is executed, see # normalization section for further details. import_MO() must be run before integrate_MO().
 
 import_MO() has eight parameter inputs:
 
@@ -193,10 +193,27 @@ library(integrateMO)
 import_MO(rnaseq_counts = test_rnaseq_counts, rrbs_mvals = test_rrbs_mvals, meta = test_meta )
 integrate_MO(int_method = "WGCNA", RRBS_feature_map = test_RRBS_feature_map)
 ```
-After running the above code a folder called MOnorm_*date time* will be output to the current working directory containing 7 plots. Generally the plots generated 
+After running import_MO() a folder called MOnorm_"*date time*" will be output to the current working directory containing 7 plots. The plots generated 
 in this step are aimed at giving the user a full understanding of the data being input for integration. The output should also be used to check for unexpected package behavior or data quality issues. 
 
 - rnaseq_norm_filter_boxplot - boxplots of raw and normalized RNAseq counts, n = number of features before and after low count filtering.
 - rnaseq_norm_PCA1, PCA2, scree - plots of PC1vPC2 and PC2vPC4 as well as a scree plot of normalized RNAseq data
-- rnaseq_norm_PCoA_MDS - similar to PCA plots but allows for different features to be used to distinguish pairs of treatment groups. Useful if "different molecular pathways are relevant for distinguishing different pairs of samples" See limma:plotMDS documentation and Ritchie ME, Phipson B, Wu D, Hu Y, Law CW, Shi W, and Smyth GK (2015). limma powers differential expression analyses for RNA-sequencing and microarray studies. Nucleic Acids Research 43, e47. http://nar.oxfordjournals.org/content/43/7/e47
+- rnaseq_norm_PCoA_MDS - principal coordinate analysis plots, similar to PCA plots but allows for different features to be used to distinguish pairs of treatment groups. Useful if "different molecular pathways are relevant for distinguishing different pairs of samples" See limma:plotMDS documentation and Ritchie ME, Phipson B, Wu D, Hu Y, Law CW, Shi W, and Smyth GK (2015). limma powers differential expression analyses for RNA-sequencing and microarray studies. Nucleic Acids Research 43, e47. http://nar.oxfordjournals.org/content/43/7/e47
 - rrbs_boxplot - boxplot of RRBS M-values, n = number of features
+- rrbs_PCoA_MDS - PCoA of RRBS features
+
+The test data contain two omics layers, an RNAseq dataset with 500 features (genes) filtered to 494 after low count filtering and an RRBS dataset with 5,000 features (methylation loci). The feature ids of both omics layers are the rownames of the respective data frames, and the sample names are the column names.
+The test metadata has two columns, "sample" containing sample names and "TRT" containing treatment level. There is also a test RRBS feature map that contains the gene id associated with chromosome loci. For fathead minnow, which does not have fully assembled chromosomes, it is more accurate to say scaffold loci, but for 
+the purposes of this documentation I use the term chromosome to refer to the highest level of assembly of the genome.
+
+After running integrate_MO() a folder called integrateMO_WGCNA_"*date time*" will be output to the current working directory. The output of this step are aimed at giving the user a complete view of the decision points at output from integration. The 
+type of output differs for each integration method and is best understood by referencing the papers and vignettes of the method of choice. For WGCNA a total of 11 plots and 6 csv files will be saved.
+
+- Plots
+	- hclust_rnaseq_counts_SampleTree & hclust_rrbs_mvals_SampleTree - hierarchical cluster dendrograms generated using several clustering methods (see # wgcna section for further detail). These plots enable visualization of how well samples in each omic layer cluster by treatment. Outliers across multiple clustering methods can be manually removed and data import and analysis can be rerun. Additionally, poor clustering across all methods in any omics layer indicates these data may not be a good candidate for WGCNA analysis.
+	- Soft_Thresholding_Power_rnaseq_counts & Soft_Thresholding_Power_rrbs_mvals - This plot shows the chosen soft thresholding power for each omic layer from a set of candidate powers. This threshold is the power "to which co-expression similarity is raised to calculate adjacency" see section 2 Network Construction of WGCNA tutorial: Choosing the soft-thresholding power: analysis of network topology. In these plots the automatically chosen thresholding power is highlighted in red. For the test data, power = 4. 
+	- ClusterDendrogram_rnaseq_counts & ClusterDendrogram_rrbs_mvals - With the thresholding power defined, the next step in WGCNA is network construction and module detection, see WGCNA tutorial section I.2. These plots show the hierarchical clustering dendrogram used for module identification along with module color assignment. For the test data both omics layers happen to have three modules, blue, turquoise, and grey. Note that grey is a catchall comprised of features that could not otherwise be assigned a module.
+	- ClusteringCutoff_rnaseq_counts & ClusteringCutoff_rrbs_mvals - These plots compliment the clustering dendrograms and show which, if any, detected modules are merged due to similarity. This plot shows the clustering cutoff for merging modules, automatically set to 0.25 corresponding to correlation of 0.75, superimposed on the clustering of all potential modules. In the test data all modules fall within the cutoff and no modules are merged.
+	- rnaseq_counts_rrbs_mvals_Module_Relationship, Module-Module_cor & Module-Module_pval - This plot is probably of greatest interest to users, it shows the relationship between modules found in each omic layer, which is the crux of the multi-omic application of WGCNA. Specifically, this plot shows the pearson's correlation and significance (p-value, shown in parentheses) between RNAseq modules and RRBS modules. The values in this plot are saved in Module-Module cor and pval spreadsheets. The methods used to generate these plots are adapted from section I.3 of the WGCNA tutorial.
+	- Module_Eigengenes_avgExp_heatplot_rnaseq_counts & Module_Eigengenes_avgExp_heatplot_rrbs_mvalues - These plots show heat plots of the average normalized expression in each module, averageExpr ouput of moduleEigengenes() call, see https://rdrr.io/cran/WGCNA/man/moduleEigengenes.html. 
+	- Module_Eigengenes_pairs_rnaseq_counts & Module_Eigengenes_pairs_rrbs_mvalues – These plots show pairwise plots (see pairs()) of module eigengene values in each sample. The varExplained value shows the variance of each module explained by principal component 1, varExplained output of moduleEigengenes() vall, see https://rdrr.io/cran/WGCNA/man/moduleEigengenes.html.
