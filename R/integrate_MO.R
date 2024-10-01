@@ -188,7 +188,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
         power_from_sft <- sft$fitIndices[sft$fitIndices$SFT.R.sq == max(sft$fitIndices$SFT.R.sq[1:10]), 1]
         color_forplot <- rep("black", length(sft$fitIndices$Power))
         color_forplot[power_from_sft] <- "red"
-        svglite::svglite(file = paste0(cdir, "/", "Soft_Threasholding_Power", i, ".svg"))
+        svglite::svglite(file = paste0(cdir, "/", "Soft_Threasholding_Power_", i, ".svg"))
         graphics::par(mfrow = c(1, 2))
         plot(sft$fitIndices[, 1], -sign(sft$fitIndices[, 3]) * sft$fitIndices[, 2],
              xlab = "Soft Threshold (power)", ylab = "Scale Free Topology Model Fit,signed R^2", type = "n",
@@ -220,7 +220,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
         # Cluster module eigengenes
         METree <- fastcluster::hclust(stats::as.dist(MEDiss), method = "average")
         # Plot the result
-        svglite::svglite(file = paste0(cdir, "/", "ClusteringCutoff_", i, ".svg"))
+        svglite::svglite(file = paste0(cdir, "/", "Clustering_Cutoff_", i, ".svg"))
         plot(METree, main = paste("Clustering of", i, "module eigengenes"),
              xlab = "", sub = "")
         MEDissThres <- 0.25
@@ -233,7 +233,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
         mergedColors <- merge$colors
         # Eigengenes of the new merged modules:
         mergedMEs <- merge$newMEs
-        svglite::svglite(file = paste0(cdir, "/", "ClusterDendrogram_", i, ".svg"))
+        svglite::svglite(file = paste0(cdir, "/", "Cluster_Dendrogram_", i, ".svg"))
         WGCNA::plotDendroAndColors(geneTree, cbind(dynamicColors, mergedColors),
                                     c("Dynamic Tree Cut", "Merged dynamic"),
                                     dendroLabels = FALSE, hang = 0.03,
@@ -275,7 +275,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
         power_from_sft <- sft$fitIndices[sft$fitIndices$SFT.R.sq == max(sft$fitIndices$SFT.R.sq[1:10]), 1]
         color_forplot <- rep("black", length(sft$fitIndices$Power))
         color_forplot[power_from_sft] <- "red"
-        svglite::svglite(file = paste0(cdir, "/", "Soft_Threasholding_Power", i, ".svg"))
+        svglite::svglite(file = paste0(cdir, "/", "Soft_Threasholding_Power_", i, ".svg"))
         graphics::par(mfrow = c(1, 2))
         # Plot the results:
         # Scale-free topology fit index as a function of the soft-thresholding power
