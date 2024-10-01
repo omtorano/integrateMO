@@ -146,6 +146,7 @@ integrate_MO <- function(int_method = c("sPLS-DA", "WGCNA", "SNF"), RRBS_feature
       }
     lowcount_omics_MEs <- list()
     block_MEs <- list()
+    modassignment <- list()
     TRT_number <- meta$TRT
     for (i in 1:length(unique(meta$TRT))){
       TRT_number <- gsub(unique(meta$TRT)[i], i, TRT_number)
